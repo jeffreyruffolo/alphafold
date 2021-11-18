@@ -43,7 +43,7 @@ from alphafold.model import data
 
 logging.set_verbosity(logging.INFO)
 
-flags.DEFINE_list(
+flags.DEFINE_string(
     'fasta_paths', None, 'Paths to FASTA files, each containing a prediction '
     'target that will be folded one after another. If a FASTA file contains '
     'multiple sequences, then it will be folded as a multimer. Paths should be '

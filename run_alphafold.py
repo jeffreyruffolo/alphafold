@@ -289,8 +289,8 @@ def predict_structure(fasta_path: str,
 
 
 def main(argv):
-    if len(argv) > 1:
-        raise app.UsageError('Too many command-line arguments.')
+    # if len(argv) > 1:
+    #     raise app.UsageError('Too many command-line arguments.')
 
     for tool_name in ('jackhmmer', 'hhblits', 'hhsearch', 'hmmsearch',
                       'hmmbuild', 'kalign'):
@@ -337,7 +337,23 @@ def main(argv):
         num_ensemble = 1
 
     # Check for duplicate FASTA file names.
-    fasta_names = [pathlib.Path(p).stem for p in FLAGS.fasta_paths]
+    _fasta_paths = FLAGS.fasta_paths
+    fasta_paths = []
+    print(fasta_paths)
+    for fp in _fasta_paths:
+        if "*" in fp:
+            fasta_paths.extend(list(glob(fp)))
+        else:
+            fasta_paths.append(fp)
+
+    fasta_paths = list(sorted(fasta_paths))
+    fasta_paths = [
+        fp for fp in fasta_paths if not os.path.exists(
+            os.path.join(FLAGS.output_dir,
+                         os.path.split(fp)[1][:-6], "ranked_0.pdb"))
+    ]
+
+    fasta_names = [pathlib.Path(p).stem for p in fasta_paths]
     if len(fasta_names) != len(set(fasta_names)):
         raise ValueError('All FASTA paths must have a unique basename.')
 
@@ -434,27 +450,6 @@ def main(argv):
     if random_seed is None:
         random_seed = random.randrange(sys.maxsize // len(model_names))
     logging.info('Using random seed %d for the data pipeline', random_seed)
-
-    # Check for duplicate FASTA file names.
-    _fasta_paths = FLAGS.fasta_paths
-    fasta_paths = []
-    print(fasta_paths)
-    for fp in _fasta_paths:
-        if "*" in fp:
-            fasta_paths.extend(list(glob(fp)))
-        else:
-            fasta_paths.append(fp)
-
-    fasta_paths = list(sorted(fasta_paths))
-    fasta_paths = [
-        fp for fp in fasta_paths if not os.path.exists(
-            os.path.join(FLAGS.output_dir,
-                         os.path.split(fp)[1][:-6], "ranked_0.pdb"))
-    ]
-
-    fasta_names = [pathlib.Path(p).stem for p in fasta_paths]
-    if len(fasta_names) != len(set(fasta_names)):
-        raise ValueError('All FASTA paths must have a unique basename.')
 
     # Predict structure for each of the sequences.
     for i, fasta_path in enumerate(fasta_paths):

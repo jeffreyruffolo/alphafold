@@ -22,6 +22,7 @@ import sys
 import time
 from typing import Dict, Union, Optional
 from glob import glob
+from tqdm import tqdm
 
 from absl import app
 from absl import flags
@@ -329,7 +330,7 @@ def main(argv):
     uniclust30_database_path = os.path.join(
         data_dir, 'uniclust30/uniclust30_2018_08/uniclust30_2018_08')
     small_bfd_database_path = os.path.join(data_dir, )
-    uniprot_database_path = os.path.join(data_dir, 'uniprot')
+    uniprot_database_path = os.path.join(data_dir, 'uniprot/uniprot.fasta')
 
     if FLAGS.model_preset == 'monomer_casp14':
         num_ensemble = 8
@@ -339,12 +340,10 @@ def main(argv):
     # Check for duplicate FASTA file names.
     _fasta_paths = FLAGS.fasta_paths
     fasta_paths = []
-    print(fasta_paths)
-    for fp in _fasta_paths:
-        if "*" in fp:
-            fasta_paths.extend(list(glob(fp)))
-        else:
-            fasta_paths.append(fp)
+    if os.path.isdir(_fasta_paths):
+        fasta_paths.extend(list(glob(os.path.join(_fasta_paths, "*.fasta"))))
+    else:
+        fasta_paths.append(_fasta_paths)
 
     fasta_paths = list(sorted(fasta_paths))
     fasta_paths = [
@@ -452,7 +451,7 @@ def main(argv):
     logging.info('Using random seed %d for the data pipeline', random_seed)
 
     # Predict structure for each of the sequences.
-    for i, fasta_path in enumerate(fasta_paths):
+    for i, fasta_path in tqdm(enumerate(fasta_paths), total=len(fasta_paths)):
         is_prokaryote = is_prokaryote_list[i] if run_multimer_system else None
         fasta_name = fasta_names[i]
         predict_structure(fasta_path=fasta_path,

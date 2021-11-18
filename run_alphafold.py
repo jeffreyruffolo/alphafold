@@ -321,7 +321,7 @@ def main(argv):
     template_mmcif_dir = os.path.join(data_dir, 'pdb_mmcif/mmcif_files/')
     obsolete_pdbs_path = os.path.join(data_dir, 'pdb_mmcif/obsolete.dat')
     pdb70_database_path = os.path.join(data_dir, 'pdb70/pdb70')
-    uniref90_database_path = os.path.join(data_dir, 'uniref90/uniref90.fasta ')
+    uniref90_database_path = os.path.join(data_dir, 'uniref90/uniref90.fasta')
     mgnify_database_path = os.path.join(data_dir, 'mgnify/mgy_clusters.fa')
     bfd_database_path = os.path.join(
         data_dir,

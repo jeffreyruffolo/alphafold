@@ -125,6 +125,7 @@ flags.DEFINE_boolean(
     'use_precomputed_msas', False, 'Whether to read MSAs that '
     'have been written to disk. WARNING: This will not check '
     'if the sequence, database or configuration have changed.')
+flags.DEFINE_integer('cpu', 8, '')
 
 FLAGS = flags.FLAGS
 
@@ -483,4 +484,3 @@ if __name__ == '__main__':
     ])
 
     app.run(main)
-

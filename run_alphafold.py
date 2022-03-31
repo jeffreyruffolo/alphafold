@@ -324,7 +324,7 @@ def main(argv):
     obsolete_pdbs_path = os.path.join(data_dir, 'pdb_mmcif/obsolete.dat')
     pdb70_database_path = os.path.join(data_dir, 'pdb70/pdb70')
     uniref90_database_path = os.path.join(data_dir, 'uniref90/uniref90.fasta')
-    mgnify_database_path = os.path.join(data_dir, 'mgnify/mgy_clusters.fa')
+    mgnify_database_path = os.path.join(data_dir, 'mgnify/mgy_clusters_2018_12.fa')
     bfd_database_path = os.path.join(
         data_dir,
         'bfd/bfd_metaclust_clu_complete_id30_c90_final_seq.sorted_opt')

@@ -128,6 +128,7 @@ flags.DEFINE_boolean(
     'if the sequence, database or configuration have changed.')
 flags.DEFINE_integer('cpu', 8, '')
 flags.DEFINE_boolean('no_amber', False, '')
+flags.DEFINE_boolean('no_msa', False, '')
 
 FLAGS = flags.FLAGS
 
@@ -324,7 +325,8 @@ def main(argv):
     obsolete_pdbs_path = os.path.join(data_dir, 'pdb_mmcif/obsolete.dat')
     pdb70_database_path = os.path.join(data_dir, 'pdb70/pdb70')
     uniref90_database_path = os.path.join(data_dir, 'uniref90/uniref90.fasta')
-    mgnify_database_path = os.path.join(data_dir, 'mgnify/mgy_clusters_2018_12.fa')
+    mgnify_database_path = os.path.join(data_dir,
+                                        'mgnify/mgy_clusters_2018_12.fa')
     bfd_database_path = os.path.join(
         data_dir,
         'bfd/bfd_metaclust_clu_complete_id30_c90_final_seq.sorted_opt')
@@ -411,6 +413,7 @@ def main(argv):
         template_featurizer=template_featurizer,
         use_small_bfd=use_small_bfd,
         use_precomputed_msas=FLAGS.use_precomputed_msas,
+        use_single_sequence=FLAGS.no_msa,
         n_cpu=FLAGS.cpu)
 
     if run_multimer_system:
@@ -419,6 +422,7 @@ def main(argv):
             jackhmmer_binary_path=FLAGS.jackhmmer_binary_path,
             uniprot_database_path=uniprot_database_path,
             use_precomputed_msas=FLAGS.use_precomputed_msas,
+            use_single_sequence=FLAGS.no_msa,
             n_cpu=FLAGS.cpu)
     else:
         data_pipeline = monomer_data_pipeline

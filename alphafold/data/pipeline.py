@@ -95,19 +95,8 @@ def make_msa_features(msas: Sequence[parsers.Msa]) -> FeatureDict:
 def make_empty_msa_features() -> FeatureDict:
     """Constructs an empty feature dict of MSA features."""
 
-    num_res = 0
-    num_alignments = 0
-    features = {}
-    features['deletion_matrix_int'] = np.empty((num_alignments, num_res),
-                                               dtype=np.int32)
-    features['msa'] = np.empty((num_alignments, num_res), dtype=np.int32)
-    features['num_alignments'] = np.array([num_alignments] * num_res,
-                                          dtype=np.int32)
-    features['msa_uniprot_accession_identifiers'] = np.array(num_alignments,
-                                                             dtype=np.object_)
-    features['msa_species_identifiers'] = np.array(num_alignments,
-                                                   dtype=np.object_)
-    return features
+    empty_msa = parsers.Msa(sequences=[], deletion_matrix=[], descriptions=[])
+    return make_msa_features(empty_msa)
 
 
 def run_msa_tool(

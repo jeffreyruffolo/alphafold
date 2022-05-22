@@ -92,6 +92,24 @@ def make_msa_features(msas: Sequence[parsers.Msa]) -> FeatureDict:
     return features
 
 
+def make_empty_msa_features() -> FeatureDict:
+    """Constructs an empty feature dict of MSA features."""
+
+    num_res = 0
+    num_alignments = 0
+    features = {}
+    features['deletion_matrix_int'] = np.empty((num_alignments, num_res),
+                                               dtype=np.int32)
+    features['msa'] = np.empty((num_alignments, num_res), dtype=np.int32)
+    features['num_alignments'] = np.array([num_alignments] * num_res,
+                                          dtype=np.int32)
+    features['msa_uniprot_accession_identifiers'] = np.array(num_alignments,
+                                                             dtype=np.object_)
+    features['msa_species_identifiers'] = np.array(num_alignments,
+                                                   dtype=np.object_)
+    return features
+
+
 def run_msa_tool(
     msa_runner,
     input_fasta_path: str,
@@ -207,7 +225,7 @@ class DataPipeline:
             msa_features = make_msa_features(
                 (uniref90_msa, bfd_msa, mgnify_msa))
         else:
-            msa_features = {}
+            msa_features = make_empty_msa_features()
 
         msa_for_templates = jackhmmer_uniref90_result['sto']
         msa_for_templates = parsers.truncate_stockholm_msa(

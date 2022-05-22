@@ -207,7 +207,7 @@ class DataPipeline:
             msa_features = make_msa_features(
                 (uniref90_msa, bfd_msa, mgnify_msa))
         else:
-            msa_features = FeatureDict()
+            msa_features = {}
 
         msa_for_templates = jackhmmer_uniref90_result['sto']
         msa_for_templates = parsers.truncate_stockholm_msa(
@@ -245,11 +245,15 @@ class DataPipeline:
             description=input_description,
             num_res=num_res)
 
-        logging.info('Uniref90 MSA size: %d sequences.', len(uniref90_msa))
-        logging.info('BFD MSA size: %d sequences.', len(bfd_msa))
-        logging.info('MGnify MSA size: %d sequences.', len(mgnify_msa))
-        logging.info('Final (deduplicated) MSA size: %d sequences.',
-                     msa_features['num_alignments'][0])
+        if not self.use_single_sequence:
+            logging.info('Uniref90 MSA size: %d sequences.', len(uniref90_msa))
+            logging.info('BFD MSA size: %d sequences.', len(bfd_msa))
+            logging.info('MGnify MSA size: %d sequences.', len(mgnify_msa))
+            logging.info('Final (deduplicated) MSA size: %d sequences.',
+                         msa_features['num_alignments'][0])
+        else:
+            logging.info('Not using MSAs.')
+
         logging.info(
             'Total number of templates (NB: this can include bad '
             'templates and is later filtered to top 4): %d.',

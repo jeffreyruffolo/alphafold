@@ -92,10 +92,12 @@ def make_msa_features(msas: Sequence[parsers.Msa]) -> FeatureDict:
     return features
 
 
-def make_empty_msa_features() -> FeatureDict:
+def make_empty_msa_features(sequence: str) -> FeatureDict:
     """Constructs an empty feature dict of MSA features."""
 
-    empty_msa = parsers.Msa(sequences=[], deletion_matrix=[], descriptions=[])
+    empty_msa = parsers.Msa(sequences=[sequence],
+                            deletion_matrix=[[1] * len(sequence)],
+                            descriptions=["Empty MSA"])
     return make_msa_features(empty_msa)
 
 
@@ -214,7 +216,7 @@ class DataPipeline:
             msa_features = make_msa_features(
                 (uniref90_msa, bfd_msa, mgnify_msa))
         else:
-            msa_features = make_empty_msa_features()
+            msa_features = make_empty_msa_features(input_sequence)
 
         msa_for_templates = jackhmmer_uniref90_result['sto']
         msa_for_templates = parsers.truncate_stockholm_msa(

@@ -98,7 +98,7 @@ def make_empty_msa_features(sequence: str) -> FeatureDict:
     empty_msa = parsers.Msa(sequences=[sequence],
                             deletion_matrix=[[1] * len(sequence)],
                             descriptions=["Empty MSA"])
-    return make_msa_features(empty_msa)
+    return make_msa_features([empty_msa])
 
 
 def run_msa_tool(

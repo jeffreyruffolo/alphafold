@@ -491,7 +491,10 @@ def main(argv):
                 is_prokaryote=is_prokaryote,
             ))
 
-    process_map(predict_structure, args, max_workers=FLAGS.parallel)
+    def predict_structure_(a):
+        predict_structure(**a)
+
+    process_map(predict_structure_, args, max_workers=FLAGS.parallel)
 
 
 if __name__ == '__main__':

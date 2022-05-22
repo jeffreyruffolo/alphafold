@@ -23,6 +23,7 @@ import time
 from typing import Dict, Union, Optional
 from glob import glob
 from tqdm import tqdm
+from tqdm.contrib.concurrent import process_map
 
 from absl import app
 from absl import flags
@@ -126,6 +127,7 @@ flags.DEFINE_boolean(
     'use_precomputed_msas', False, 'Whether to read MSAs that '
     'have been written to disk. WARNING: This will not check '
     'if the sequence, database or configuration have changed.')
+flags.DEFINE_integer('parallel', 1, '')
 flags.DEFINE_integer('cpu', 8, '')
 flags.DEFINE_boolean('no_amber', False, '')
 flags.DEFINE_boolean('no_msa', False, '')
@@ -459,18 +461,37 @@ def main(argv):
     logging.info('Using random seed %d for the data pipeline', random_seed)
 
     # Predict structure for each of the sequences.
+    # for i, fasta_path in tqdm(enumerate(fasta_paths), total=len(fasta_paths)):
+    #     is_prokaryote = is_prokaryote_list[i] if run_multimer_system else None
+    #     fasta_name = fasta_names[i]
+    #     predict_structure(fasta_path=fasta_path,
+    #                       fasta_name=fasta_name,
+    #                       output_dir_base=FLAGS.output_dir,
+    #                       data_pipeline=data_pipeline,
+    #                       model_runners=model_runners,
+    #                       amber_relaxer=amber_relaxer,
+    #                       benchmark=FLAGS.benchmark,
+    #                       random_seed=random_seed,
+    #                       is_prokaryote=is_prokaryote)
+
+    args = []
     for i, fasta_path in tqdm(enumerate(fasta_paths), total=len(fasta_paths)):
         is_prokaryote = is_prokaryote_list[i] if run_multimer_system else None
         fasta_name = fasta_names[i]
-        predict_structure(fasta_path=fasta_path,
-                          fasta_name=fasta_name,
-                          output_dir_base=FLAGS.output_dir,
-                          data_pipeline=data_pipeline,
-                          model_runners=model_runners,
-                          amber_relaxer=amber_relaxer,
-                          benchmark=FLAGS.benchmark,
-                          random_seed=random_seed,
-                          is_prokaryote=is_prokaryote)
+        args.append(
+            dict(
+                fasta_path=fasta_path,
+                fasta_name=fasta_name,
+                output_dir_base=FLAGS.output_dir,
+                data_pipeline=data_pipeline,
+                model_runners=model_runners,
+                amber_relaxer=amber_relaxer,
+                benchmark=FLAGS.benchmark,
+                random_seed=random_seed,
+                is_prokaryote=is_prokaryote,
+            ))
+
+    process_map(predict_structure, args, max_workers=FLAGS.parallel)
 
 
 if __name__ == '__main__':

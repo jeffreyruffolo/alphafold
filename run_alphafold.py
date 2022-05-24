@@ -127,8 +127,10 @@ flags.DEFINE_boolean(
     'use_precomputed_msas', False, 'Whether to read MSAs that '
     'have been written to disk. WARNING: This will not check '
     'if the sequence, database or configuration have changed.')
+flags.DEFINE_integer('recycles', 3, '')
 flags.DEFINE_integer('parallel', 1, '')
 flags.DEFINE_integer('cpu', 8, '')
+flags.DEFINE_boolean('preprocess', False, '')
 flags.DEFINE_boolean('no_amber', False, '')
 flags.DEFINE_boolean('no_msa', False, '')
 
@@ -159,7 +161,8 @@ def predict_structure(fasta_path: str,
                       amber_relaxer: relax.AmberRelaxation,
                       benchmark: bool,
                       random_seed: int,
-                      is_prokaryote: Optional[bool] = None):
+                      is_prokaryote: Optional[bool] = None,
+                      preprocess: bool = False):
     """Predicts structure using AlphaFold for the given sequence."""
     logging.info('Predicting %s', fasta_name)
     timings = {}
@@ -170,21 +173,27 @@ def predict_structure(fasta_path: str,
     if not os.path.exists(msa_output_dir):
         os.makedirs(msa_output_dir)
 
-    # Get features.
-    t_0 = time.time()
-    if is_prokaryote is None:
-        feature_dict = data_pipeline.process(input_fasta_path=fasta_path,
-                                             msa_output_dir=msa_output_dir)
-    else:
-        feature_dict = data_pipeline.process(input_fasta_path=fasta_path,
-                                             msa_output_dir=msa_output_dir,
-                                             is_prokaryote=is_prokaryote)
-    timings['features'] = time.time() - t_0
-
-    # Write out features as a pickled dictionary.
     features_output_path = os.path.join(output_dir, 'features.pkl')
-    with open(features_output_path, 'wb') as f:
-        pickle.dump(feature_dict, f, protocol=4)
+    if os.path.exists(features_output_path):
+        feature_dict = pickle.load(open(features_output_path, 'rb'))
+    else:
+        # Get features.
+        t_0 = time.time()
+        if is_prokaryote is None:
+            feature_dict = data_pipeline.process(input_fasta_path=fasta_path,
+                                                 msa_output_dir=msa_output_dir)
+        else:
+            feature_dict = data_pipeline.process(input_fasta_path=fasta_path,
+                                                 msa_output_dir=msa_output_dir,
+                                                 is_prokaryote=is_prokaryote)
+        timings['features'] = time.time() - t_0
+
+        # Write out features as a pickled dictionary.
+        with open(features_output_path, 'wb') as f:
+            pickle.dump(feature_dict, f, protocol=4)
+
+    if preprocess:
+        return
 
     unrelaxed_pdbs = {}
     relaxed_pdbs = {}
@@ -433,10 +442,12 @@ def main(argv):
     model_names = config.MODEL_PRESETS[FLAGS.model_preset]
     for model_name in model_names:
         model_config = config.model_config(model_name)
+        config.model.num_recycle = FLAGS.recycles
         if run_multimer_system:
             model_config.model.num_ensemble_eval = num_ensemble
         else:
             model_config.data.eval.num_ensemble = num_ensemble
+            config.data.common.num_recycle = FLAGS.recycles
         model_params = data.get_model_haiku_params(model_name=model_name,
                                                    data_dir=data_dir)
         model_runner = model.RunModel(model_config, model_params)
@@ -461,40 +472,21 @@ def main(argv):
     logging.info('Using random seed %d for the data pipeline', random_seed)
 
     # Predict structure for each of the sequences.
-    # for i, fasta_path in tqdm(enumerate(fasta_paths), total=len(fasta_paths)):
-    #     is_prokaryote = is_prokaryote_list[i] if run_multimer_system else None
-    #     fasta_name = fasta_names[i]
-    #     predict_structure(fasta_path=fasta_path,
-    #                       fasta_name=fasta_name,
-    #                       output_dir_base=FLAGS.output_dir,
-    #                       data_pipeline=data_pipeline,
-    #                       model_runners=model_runners,
-    #                       amber_relaxer=amber_relaxer,
-    #                       benchmark=FLAGS.benchmark,
-    #                       random_seed=random_seed,
-    #                       is_prokaryote=is_prokaryote)
-
-    args = []
     for i, fasta_path in tqdm(enumerate(fasta_paths), total=len(fasta_paths)):
         is_prokaryote = is_prokaryote_list[i] if run_multimer_system else None
         fasta_name = fasta_names[i]
-        args.append(
-            dict(
-                fasta_path=fasta_path,
-                fasta_name=fasta_name,
-                output_dir_base=FLAGS.output_dir,
-                data_pipeline=data_pipeline,
-                model_runners=model_runners,
-                amber_relaxer=amber_relaxer,
-                benchmark=FLAGS.benchmark,
-                random_seed=random_seed,
-                is_prokaryote=is_prokaryote,
-            ))
-
-    def predict_structure_(a):
-        predict_structure(**a)
-
-    process_map(predict_structure_, args, max_workers=FLAGS.parallel)
+        predict_structure(
+            fasta_path=fasta_path,
+            fasta_name=fasta_name,
+            output_dir_base=FLAGS.output_dir,
+            data_pipeline=data_pipeline,
+            model_runners=model_runners,
+            amber_relaxer=amber_relaxer,
+            benchmark=FLAGS.benchmark,
+            random_seed=random_seed,
+            is_prokaryote=is_prokaryote,
+            preprocess=FLAGS.preprocess,
+        )
 
 
 if __name__ == '__main__':

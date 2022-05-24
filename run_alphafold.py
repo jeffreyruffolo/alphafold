@@ -453,7 +453,7 @@ def main(argv):
     model_names = config.MODEL_PRESETS[FLAGS.model_preset]
     # for model_name in model_names:
     #     model_config = config.model_config(model_name)
-    #     config.model.num_recycle = FLAGS.recycles
+    #     config.num_recycle = FLAGS.recycles
     #     if run_multimer_system:
     #         model_config.model.num_ensemble_eval = num_ensemble
     #     else:
@@ -467,7 +467,7 @@ def main(argv):
     model_runners = load_models_and_params(
         num_models=len(model_names),
         use_templates=True,
-        num_recycles=FLAGS.recycles,
+        num_recycle=FLAGS.recycles,
         data_dir=data_dir,
     )
 

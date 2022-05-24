@@ -37,6 +37,7 @@ from alphafold.data import templates
 from alphafold.data.tools import hhsearch
 from alphafold.data.tools import hmmsearch
 from alphafold.efficient_folding.load_models import load_models_and_params
+from alphafold.efficient_folding.batch_input import batch_input
 from alphafold.model import config
 from alphafold.model import model
 from alphafold.relax import relax
@@ -219,6 +220,15 @@ def predict_structure(fasta_path: str,
         model_random_seed = 0  # model_index + random_seed * num_models
         processed_feature_dict = model_runner.process_features(
             feature_dict, random_seed=model_random_seed)
+        if not "multimer" in model_name:
+            processed_feature_dict = batch_input(
+                processed_feature_dict,
+                model_runner,
+                model_name,
+                feature_dict['seq_length'],
+                True,
+            )
+
         timings[f'process_features_{model_name}'] = time.time() - t_0
 
         t_0 = time.time()

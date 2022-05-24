@@ -37,7 +37,6 @@ from alphafold.data import templates
 from alphafold.data.tools import hhsearch
 from alphafold.data.tools import hmmsearch
 from alphafold.efficient_folding.load_models import load_models_and_params
-from alphafold.efficient_folding.batch_input import batch_input
 from alphafold.model import config
 from alphafold.model import model
 from alphafold.relax import relax

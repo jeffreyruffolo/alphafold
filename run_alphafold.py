@@ -203,13 +203,13 @@ def predict_structure(fasta_path: str,
     ranking_confidences = {}
 
     # Run the models.
-    # Avoid recompilation ala ColabFold
     num_models = len(model_runners)
     # for model_index, (model_name,
     #                   model_runner) in enumerate(model_runners.items()):
     for model_index, (model_name,
                       (model_runner,
                        params)) in enumerate(model_runners.items()):
+        # Avoid recompilation ala ColabFold
         # swap params to avoid recompiling
         # note: models 1,2 have diff number of params compared to models 3,4,5 (this was handled on construction)
         model_runner.params = params
@@ -222,8 +222,8 @@ def predict_structure(fasta_path: str,
         timings[f'process_features_{model_name}'] = time.time() - t_0
 
         t_0 = time.time()
-        prediction_result = model_runner.predict(processed_feature_dict,
-                                                 random_seed=model_random_seed)
+        prediction_result = model_runner.predict(
+            processed_feature_dict)  #, random_seed=model_random_seed)
         t_diff = time.time() - t_0
         timings[f'predict_and_compile_{model_name}'] = t_diff
         logging.info(
@@ -468,6 +468,7 @@ def main(argv):
         num_models=len(model_names),
         use_templates=True,
         num_recycle=FLAGS.recycles,
+        num_ensemble=num_ensemble,
         data_dir=data_dir,
     )
 

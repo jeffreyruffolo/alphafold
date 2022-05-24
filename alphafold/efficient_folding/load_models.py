@@ -52,7 +52,7 @@ def load_models_and_params(
                 else:
                     model_config.model.num_ensemble_eval = num_ensemble
             model_runner_and_params[model_name] = (
-                model.RunModel(model_config, params, is_training=training),
+                model.RunModel(model_config, params),
                 params,
             )
     else:
@@ -95,7 +95,7 @@ def load_models_and_params(
                 params_subset[k] = params[k]
 
             model_runner_and_params[model_name] = (
-                model.RunModel(model_config, params, is_training=training),
+                model.RunModel(model_config, params),
                 params,
             )
         # reorder model

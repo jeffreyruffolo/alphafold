@@ -20,10 +20,11 @@ import random
 import shutil
 import sys
 import time
-from typing import Dict, Union, Optional
+from typing import Dict, Union, Optional, List, Tuple
 from glob import glob
 from tqdm import tqdm
 from tqdm.contrib.concurrent import process_map
+import haiku
 
 from absl import app
 from absl import flags
@@ -35,6 +36,7 @@ from alphafold.data import pipeline_multimer
 from alphafold.data import templates
 from alphafold.data.tools import hhsearch
 from alphafold.data.tools import hmmsearch
+from alphafold.efficient_folding.load_models import load_models_and_params
 from alphafold.model import config
 from alphafold.model import model
 from alphafold.relax import relax
@@ -157,7 +159,8 @@ def predict_structure(fasta_path: str,
                       output_dir_base: str,
                       data_pipeline: Union[pipeline.DataPipeline,
                                            pipeline_multimer.DataPipeline],
-                      model_runners: Dict[str, model.RunModel],
+                      model_runners: Dict[str, Tuple[model.RunModel,
+                                                     haiku.Params]],
                       amber_relaxer: relax.AmberRelaxation,
                       benchmark: bool,
                       random_seed: int,
@@ -200,9 +203,17 @@ def predict_structure(fasta_path: str,
     ranking_confidences = {}
 
     # Run the models.
+    # Avoid recompilation ala ColabFold
     num_models = len(model_runners)
+    # for model_index, (model_name,
+    #                   model_runner) in enumerate(model_runners.items()):
     for model_index, (model_name,
-                      model_runner) in enumerate(model_runners.items()):
+                      (model_runner,
+                       params)) in enumerate(model_runners.items()):
+        # swap params to avoid recompiling
+        # note: models 1,2 have diff number of params compared to models 3,4,5 (this was handled on construction)
+        model_runner.params = params
+
         logging.info('Running model %s on %s', model_name, fasta_name)
         t_0 = time.time()
         model_random_seed = model_index + random_seed * num_models
@@ -440,18 +451,25 @@ def main(argv):
 
     model_runners = {}
     model_names = config.MODEL_PRESETS[FLAGS.model_preset]
-    for model_name in model_names:
-        model_config = config.model_config(model_name)
-        config.model.num_recycle = FLAGS.recycles
-        if run_multimer_system:
-            model_config.model.num_ensemble_eval = num_ensemble
-        else:
-            model_config.data.eval.num_ensemble = num_ensemble
-            config.data.common.num_recycle = FLAGS.recycles
-        model_params = data.get_model_haiku_params(model_name=model_name,
-                                                   data_dir=data_dir)
-        model_runner = model.RunModel(model_config, model_params)
-        model_runners[model_name] = model_runner
+    # for model_name in model_names:
+    #     model_config = config.model_config(model_name)
+    #     config.model.num_recycle = FLAGS.recycles
+    #     if run_multimer_system:
+    #         model_config.model.num_ensemble_eval = num_ensemble
+    #     else:
+    #         model_config.data.eval.num_ensemble = num_ensemble
+    #         config.data.common.num_recycle = FLAGS.recycles
+    #     model_params = data.get_model_haiku_params(model_name=model_name,
+    #                                                data_dir=data_dir)
+    #     model_runner = model.RunModel(model_config, model_params)
+    #     model_runners[model_name] = model_runner
+
+    model_runners = load_models_and_params(
+        num_models=len(model_names),
+        use_templates=True,
+        num_recycles=FLAGS.recycles,
+        data_dir=data_dir,
+    )
 
     logging.info('Have %d models: %s', len(model_runners),
                  list(model_runners.keys()))

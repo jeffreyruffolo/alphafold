@@ -84,7 +84,6 @@ def load_models_and_params(
                         model_name="model_" + str(model_number) + model_suffix,
                         data_dir=str(data_dir),
                     ),
-                    is_training=training,
                 )
             model_name = f"model_{model_number}"
             params = data.get_model_haiku_params(model_name=model_name +

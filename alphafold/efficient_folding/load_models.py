@@ -78,7 +78,7 @@ def load_models_and_params(
         model_name = f"model_{model_number}"
         for m in model_runner_and_params_build_order:
             if model_name == m[0]:
-                model_runner_and_params.append(m)
+                model_runner_and_params[model_name] = (m[1], m[2])
                 break
 
     return model_runner_and_params

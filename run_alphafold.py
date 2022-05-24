@@ -21,6 +21,7 @@ import shutil
 import sys
 import time
 from typing import Dict, Union, Optional, List, Tuple
+from bisect import bisect
 from glob import glob
 from tqdm import tqdm
 from tqdm.contrib.concurrent import process_map
@@ -160,8 +161,9 @@ def predict_structure(fasta_path: str,
                       output_dir_base: str,
                       data_pipeline: Union[pipeline.DataPipeline,
                                            pipeline_multimer.DataPipeline],
-                      model_runners: Dict[str, Tuple[model.RunModel,
-                                                     haiku.Params]],
+                      model_runner_cache: Dict[int, Dict[str,
+                                                         Tuple[model.RunModel,
+                                                               haiku.Params]]],
                       amber_relaxer: relax.AmberRelaxation,
                       benchmark: bool,
                       random_seed: int,
@@ -204,10 +206,16 @@ def predict_structure(fasta_path: str,
     ranking_confidences = {}
 
     # Run the models.
+    model_runner_sizes = list(model_runner_cache.keys())
+    model_runner_size = model_runner_sizes[bisect(model_runner_sizes,
+                                                  feature_dict["seq_length"])]
+    model_runners = model_runner_cache[model_runner_size]
     num_models = len(model_runners)
     # for model_index, (model_name,
     #                   model_runner) in enumerate(model_runners.items()):
-    for model_name, (model_runner, params) in model_runners.items():
+    for model_index, (model_name,
+                      (model_runner,
+                       params)) in enumerate(model_runners.items()):
         # Avoid recompilation ala ColabFold
         # swap params to avoid recompiling
         # note: models 1,2 have diff number of params compared to models 3,4,5 (this was handled on construction)
@@ -218,14 +226,14 @@ def predict_structure(fasta_path: str,
 
         logging.info('Running model %s on %s', model_name, fasta_name)
         t_0 = time.time()
-        model_random_seed = 0  # model_index + random_seed * num_models
+        model_random_seed = model_index + random_seed * num_models
         processed_feature_dict = model_runner.process_features(
             feature_dict, random_seed=model_random_seed)
         processed_feature_dict = pad_inputs(
             input_features=processed_feature_dict,
             model_runner=model_runner,
             model_name=model_name,
-            crop_len=200,
+            crop_len=model_runner_size,
             use_templates=True,
         )
         timings[f'process_features_{model_name}'] = time.time() - t_0
@@ -458,18 +466,20 @@ def main(argv):
     else:
         data_pipeline = monomer_data_pipeline
 
-    model_runners = {}
-    model_names = config.MODEL_PRESETS[FLAGS.model_preset]
-    model_runners = load_models_and_params(
-        num_models=len(model_names),
-        use_templates=True,
-        num_recycle=FLAGS.recycles,
-        num_ensemble=num_ensemble,
-        data_dir=data_dir,
-    )
+    model_runner_sizes = [100, 200, 500, 1000]
+    model_runner_cache = {}
+    for s in model_runner_sizes:
+        model_names = config.MODEL_PRESETS[FLAGS.model_preset]
+        model_runner_cache[s] = load_models_and_params(
+            num_models=len(model_names),
+            use_templates=True,
+            num_recycle=FLAGS.recycles,
+            num_ensemble=num_ensemble,
+            data_dir=data_dir,
+        )
 
-    logging.info('Have %d models: %s', len(model_runners),
-                 list(model_runners.keys()))
+    # logging.info('Have %d models: %s', len(model_runners),
+    #              list(model_runners.keys()))
 
     if FLAGS.no_amber:
         amber_relaxer = None
@@ -495,7 +505,7 @@ def main(argv):
             fasta_name=fasta_name,
             output_dir_base=FLAGS.output_dir,
             data_pipeline=data_pipeline,
-            model_runners=model_runners,
+            model_runner_cache=model_runner_cache,
             amber_relaxer=amber_relaxer,
             benchmark=FLAGS.benchmark,
             random_seed=random_seed,

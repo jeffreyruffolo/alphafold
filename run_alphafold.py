@@ -220,15 +220,6 @@ def predict_structure(fasta_path: str,
         model_random_seed = 0  # model_index + random_seed * num_models
         processed_feature_dict = model_runner.process_features(
             feature_dict, random_seed=model_random_seed)
-        if not "multimer" in model_name:
-            processed_feature_dict = batch_input(
-                processed_feature_dict,
-                model_runner,
-                model_name,
-                feature_dict['seq_length'],
-                True,
-            )
-
         timings[f'process_features_{model_name}'] = time.time() - t_0
 
         t_0 = time.time()

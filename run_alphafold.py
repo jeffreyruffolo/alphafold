@@ -37,6 +37,7 @@ from alphafold.data import templates
 from alphafold.data.tools import hhsearch
 from alphafold.data.tools import hmmsearch
 from alphafold.efficient_folding.load_models import load_models_and_params
+from alphafold.efficient_folding.pad_inputs import pad_inputs
 from alphafold.model import config
 from alphafold.model import model
 from alphafold.relax import relax
@@ -206,9 +207,7 @@ def predict_structure(fasta_path: str,
     num_models = len(model_runners)
     # for model_index, (model_name,
     #                   model_runner) in enumerate(model_runners.items()):
-    for model_index, (model_name,
-                      (model_runner,
-                       params)) in enumerate(model_runners.items()):
+    for model_name, (model_runner, params) in model_runners.items():
         # Avoid recompilation ala ColabFold
         # swap params to avoid recompiling
         # note: models 1,2 have diff number of params compared to models 3,4,5 (this was handled on construction)
@@ -222,6 +221,13 @@ def predict_structure(fasta_path: str,
         model_random_seed = 0  # model_index + random_seed * num_models
         processed_feature_dict = model_runner.process_features(
             feature_dict, random_seed=model_random_seed)
+        processed_feature_dict = pad_inputs(
+            input_features=processed_feature_dict,
+            model_runner=model_runner,
+            model_name=model_name,
+            crop_len=200,
+            use_templates=True,
+        )
         timings[f'process_features_{model_name}'] = time.time() - t_0
 
         t_0 = time.time()
@@ -454,19 +460,6 @@ def main(argv):
 
     model_runners = {}
     model_names = config.MODEL_PRESETS[FLAGS.model_preset]
-    # for model_name in model_names:
-    #     model_config = config.model_config(model_name)
-    #     config.num_recycle = FLAGS.recycles
-    #     if run_multimer_system:
-    #         model_config.model.num_ensemble_eval = num_ensemble
-    #     else:
-    #         model_config.data.eval.num_ensemble = num_ensemble
-    #         config.data.common.num_recycle = FLAGS.recycles
-    #     model_params = data.get_model_haiku_params(model_name=model_name,
-    #                                                data_dir=data_dir)
-    #     model_runner = model.RunModel(model_config, model_params)
-    #     model_runners[model_name] = model_runner
-
     model_runners = load_models_and_params(
         num_models=len(model_names),
         use_templates=True,

@@ -17,7 +17,6 @@ def load_models_and_params(
     model_order: Optional[List[int]] = None,
     model_suffix: str = "_ptm",
     data_dir: Path = Path("."),
-    recompile_all_models: bool = False,
     stop_at_score: float = 100,
     rank_by: str = "plddt",
     training: bool = False,

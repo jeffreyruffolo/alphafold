@@ -216,14 +216,14 @@ def predict_structure(fasta_path: str,
 
         logging.info('Running model %s on %s', model_name, fasta_name)
         t_0 = time.time()
-        model_random_seed = model_index + random_seed * num_models
+        model_random_seed = 0  # model_index + random_seed * num_models
         processed_feature_dict = model_runner.process_features(
             feature_dict, random_seed=model_random_seed)
         timings[f'process_features_{model_name}'] = time.time() - t_0
 
         t_0 = time.time()
-        prediction_result = model_runner.predict(
-            processed_feature_dict)  #, random_seed=model_random_seed)
+        prediction_result = model_runner.predict(processed_feature_dict,
+                                                 random_seed=model_random_seed)
         t_diff = time.time() - t_0
         timings[f'predict_and_compile_{model_name}'] = t_diff
         logging.info(

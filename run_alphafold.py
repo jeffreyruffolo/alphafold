@@ -212,7 +212,10 @@ def predict_structure(fasta_path: str,
         # Avoid recompilation ala ColabFold
         # swap params to avoid recompiling
         # note: models 1,2 have diff number of params compared to models 3,4,5 (this was handled on construction)
-        model_runner.params = params
+        # model_runner.params = params
+        # params = data.get_model_haiku_params(name, params_loc)
+        for k in model_runner.params.keys():
+            model_runner.params[k] = params[k]
 
         logging.info('Running model %s on %s', model_name, fasta_name)
         t_0 = time.time()

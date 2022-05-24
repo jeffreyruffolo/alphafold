@@ -207,12 +207,9 @@ def predict_structure(fasta_path: str,
 
     # Run the models.
     seq_length = feature_dict["seq_length"][0].item()
-    print(seq_length)
-    print(bisect(model_runner_sizes, seq_length))
     model_runner_sizes = list(model_runner_cache.keys())
     model_runner_size = model_runner_sizes[bisect(model_runner_sizes,
                                                   seq_length)]
-    print(model_runner_size)
     model_runners = model_runner_cache[model_runner_size]
     num_models = len(model_runners)
     # for model_index, (model_name,

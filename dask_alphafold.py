@@ -136,7 +136,7 @@ def migrate_data(data_dir, local_disk):
 @dask.delayed
 def preprocess_sequence(args):
     fasta_file, output_dir, data_dir, model_preset, cpu, no_amber, no_msa, recycles = args
-    migrate_data(FLAGS.data_dir, "/tmp/")
+    migrate_data(data_dir, "/tmp/")
 
     preprocess_command = f"""
         python run_alphafold.py
@@ -154,7 +154,7 @@ def preprocess_sequence(args):
     os.system(preprocess_command)
 
     fasta_name = os.path.splitext(os.path.basename(fasta_file))[0]
-    result_dir = os.path.join(FLAGS.output_dir, fasta_name, "msa")
+    result_dir = os.path.join(output_dir, fasta_name, "msa")
     if os.path.isdir(result_dir):
         return args, True
     else:
@@ -183,7 +183,7 @@ def predict_structure(args):
     os.system(predict_command)
 
     fasta_name = os.path.splitext(os.path.basename(fasta_file))[0]
-    result_pdb = os.path.join(FLAGS.output_dir, fasta_name, "ranked_0.pdb")
+    result_pdb = os.path.join(output_dir, fasta_name, "ranked_0.pdb")
     if os.path.exists(result_pdb):
         return True
     else:

@@ -250,15 +250,18 @@ def main(argv):
     # gpu_cluster.scale(FLAGS.gpu_nodes)
     # gpu_client = Client(gpu_cluster)
 
-    preprocess_results = []
-    for fasta_file in tqdm(fasta_paths, total=len(fasta_paths)):
-        cpu_args = (fasta_file, FLAGS.output_dir, FLAGS.data_dir,
-                    FLAGS.model_preset, FLAGS.cpu, FLAGS.no_amber,
-                    FLAGS.no_msa, FLAGS.recycles)
-        cpu_result = cpu_client.submit(preprocess_sequence, cpu_args)
-        preprocess_results.append(cpu_result)
+    cpu_args = [
+        (fasta_file, FLAGS.output_dir, FLAGS.data_dir, FLAGS.model_preset,
+         FLAGS.cpu, FLAGS.no_amber, FLAGS.no_msa, FLAGS.recycles)
+        for fasta_file in fasta_paths
+    ]
+    preprocess_results = cpu_client.map(preprocess_sequence, cpu_args)
 
-    # wait(preprocess_results)
+    # for fasta_file in tqdm(fasta_paths, total=len(fasta_paths)):
+    #     cpu_result = cpu_client.submit(preprocess_sequence, cpu_args)
+    #     preprocess_results.append(cpu_result)
+
+    cpu_client.gather(preprocess_results)
 
     # predict_queue = queue.Queue()
     # [

@@ -255,27 +255,29 @@ def main(argv):
         cpu_result = cpu_client.submit(preprocess_sequence, cpu_args)
         preprocess_results.append(cpu_result)
 
-    predict_queue = queue.Queue()
-    [
-        predict_queue.put((f, r))
-        for f, r in zip(fasta_paths, preprocess_results)
-    ]
-    prediction_results = []
-    pbar = tqdm(total=len(fasta_paths))
-    while not predict_queue.empty():
-        time.sleep(0.1)
-        fasta_file, preprocess_result = predict_queue.get()
-        if preprocess_result.done():
-            gpu_args = (fasta_file, FLAGS.output_dir, FLAGS.data_dir,
-                        FLAGS.model_preset, FLAGS.cpu, FLAGS.no_amber,
-                        FLAGS.no_msa, FLAGS.recycles)
-            gpu_result = gpu_client.submit(predict_structure, gpu_args)
-            prediction_results.append(gpu_result)
-            pbar.update(1)
-        else:
-            predict_queue.put((fasta_file, preprocess_result))
+    wait(preprocess_results)
 
-    wait(prediction_results)
+    # predict_queue = queue.Queue()
+    # [
+    #     predict_queue.put((f, r))
+    #     for f, r in zip(fasta_paths, preprocess_results)
+    # ]
+    # prediction_results = []
+    # pbar = tqdm(total=len(fasta_paths))
+    # while not predict_queue.empty():
+    #     time.sleep(0.1)
+    #     fasta_file, preprocess_result = predict_queue.get()
+    #     if preprocess_result.done():
+    #         gpu_args = (fasta_file, FLAGS.output_dir, FLAGS.data_dir,
+    #                     FLAGS.model_preset, FLAGS.cpu, FLAGS.no_amber,
+    #                     FLAGS.no_msa, FLAGS.recycles)
+    #         gpu_result = gpu_client.submit(predict_structure, gpu_args)
+    #         prediction_results.append(gpu_result)
+    #         pbar.update(1)
+    #     else:
+    #         predict_queue.put((fasta_file, preprocess_result))
+
+    # wait(prediction_results)
 
 
 if __name__ == '__main__':

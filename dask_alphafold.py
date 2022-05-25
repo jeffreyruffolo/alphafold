@@ -226,7 +226,7 @@ def main(argv):
         processes=cpu_processes,
         memory=cpu_memory,
         queue="defq",
-        local_directory="/tmp",
+        local_directory=scratch_dir,
         walltime="40:00:00",
         job_extra=["-o {}".format(os.path.join(scratch_dir, "slurm-%j.out"))],
     )

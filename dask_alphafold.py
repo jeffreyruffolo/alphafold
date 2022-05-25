@@ -130,6 +130,7 @@ ROCKFISH_GPU_MEM_PER_CORE = 4
 
 def migrate_data(data_dir, local_disk):
     local_data_dir = os.path.join(local_disk, os.path.split(data_dir)[1])
+    print(local_data_dir)
     if not os.path.isdir(local_data_dir):
         os.system(f"tar -xf {data_dir} -C {local_disk}")
 

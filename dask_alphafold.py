@@ -255,7 +255,10 @@ def main(argv):
         preprocess_results.append(cpu_result)
 
     predict_queue = queue.Queue()
-    [predict_queue.put(f, r) for f, r in zip(fasta_paths, preprocess_results)]
+    [
+        predict_queue.put((f, r))
+        for f, r in zip(fasta_paths, preprocess_results)
+    ]
     prediction_results = []
     pbar = tqdm(total=len(fasta_paths))
     while not predict_queue.empty():

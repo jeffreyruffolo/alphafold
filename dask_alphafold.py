@@ -267,6 +267,7 @@ def main(argv):
                         FLAGS.no_msa, FLAGS.recycles)
             gpu_result = gpu_client.submit(predict_structure, gpu_args)
             prediction_results.append(gpu_result)
+            pbar.update(1)
         else:
             predict_queue.put((fasta_file, preprocess_result))
 

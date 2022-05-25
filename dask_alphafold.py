@@ -154,6 +154,7 @@ def preprocess_sequence(args):
         --preprocess
     """.replace("\n", " ")
 
+    logging.log(logging.INFO, f"Running {preprocess_command}")
     os.system(preprocess_command)
 
     fasta_name = os.path.splitext(os.path.basename(fasta_file))[0]
@@ -179,6 +180,7 @@ def predict_structure(args):
         --recycles {recycles}
     """.replace("\n", " ")
 
+    logging.log(logging.INFO, f"Running {predict_command}")
     os.system(predict_command)
 
     fasta_name = os.path.splitext(os.path.basename(fasta_file))[0]

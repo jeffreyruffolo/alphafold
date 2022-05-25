@@ -20,6 +20,7 @@ import random
 import shutil
 import sys
 import time
+import queue
 from typing import Dict, Union, Optional, List, Tuple
 from bisect import bisect
 from glob import glob
@@ -154,19 +155,15 @@ def preprocess_sequence(args):
     os.system(preprocess_command)
 
     fasta_name = os.path.splitext(os.path.basename(fasta_file))[0]
-    result_dir = os.path.join(output_dir, fasta_name, "msa")
-    if os.path.isdir(result_dir):
+    result_pkl = os.path.join(output_dir, fasta_name, "features.pkl")
+    if os.path.exists(result_pkl):
         return args, True
     else:
         return args, False
 
 
 def predict_structure(args):
-    (fasta_file, output_dir, data_dir, model_preset, cpu, no_amber, no_msa,
-     recycles), preprocess_success = args
-    if not preprocess_success:
-        logging.log(logging.INFO, f"{fasta_file} failed preprocessing")
-        return False
+    fasta_file, output_dir, data_dir, model_preset, cpu, no_amber, no_msa, recycles = args
 
     predict_command = f"""
         python run_alphafold.py
@@ -249,17 +246,29 @@ def main(argv):
     gpu_cluster.scale(FLAGS.gpu_nodes)
     gpu_client = Client(gpu_cluster)
 
-    prediction_results = []
+    preprocess_results = []
     for fasta_file in tqdm(fasta_paths, total=len(fasta_paths)):
         cpu_args = (fasta_file, FLAGS.output_dir, FLAGS.data_dir,
                     FLAGS.model_preset, FLAGS.cpu, FLAGS.no_amber,
                     FLAGS.no_msa, FLAGS.recycles)
         cpu_result = cpu_client.submit(preprocess_sequence, cpu_args)
-        gpu_result = gpu_client.submit(predict_structure, cpu_result)
-        prediction_results.append(gpu_result)
+        preprocess_results.append(cpu_result)
 
-        # preprocess_results = preprocess_sequence(fasta_file)
-        # preprocess_results.append(preprocess_results)
+    predict_queue = queue.Queue()
+    [predict_queue.put(f, r) for f, r in zip(fasta_paths, preprocess_results)]
+    prediction_results = []
+    pbar = tqdm(total=len(fasta_paths))
+    while not predict_queue.empty():
+        time.sleep(0.1)
+        fasta_file, preprocess_result = predict_queue.get()
+        if preprocess_result.done():
+            gpu_args = (fasta_file, FLAGS.output_dir, FLAGS.data_dir,
+                        FLAGS.model_preset, FLAGS.cpu, FLAGS.no_amber,
+                        FLAGS.no_msa, FLAGS.recycles)
+            gpu_result = gpu_client.submit(predict_structure, gpu_args)
+            prediction_results.append(gpu_result)
+        else:
+            predict_queue.put((fasta_file, preprocess_result))
 
     wait(prediction_results)
 

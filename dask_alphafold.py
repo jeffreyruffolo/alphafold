@@ -258,7 +258,7 @@ def main(argv):
         cpu_result = cpu_client.submit(preprocess_sequence, cpu_args)
         preprocess_results.append(cpu_result)
 
-    wait(preprocess_results)
+    # wait(preprocess_results)
 
     # predict_queue = queue.Queue()
     # [

@@ -230,6 +230,7 @@ def main(argv):
         walltime="40:00:00",
         job_extra=["-o {}".format(os.path.join(scratch_dir, "slurm-%j.out"))],
     )
+    print(cpu_cluster.job_script())
     cpu_cluster.scale(FLAGS.cpu_nodes)
     cpu_client = Client(cpu_cluster)
 
@@ -247,6 +248,7 @@ def main(argv):
     #             os.path.join(scratch_dir, "slurm-%j.out"))
     #     ],
     # )
+    # print(cpu_cluster.job_script())
     # gpu_cluster.scale(FLAGS.gpu_nodes)
     # gpu_client = Client(gpu_cluster)
 

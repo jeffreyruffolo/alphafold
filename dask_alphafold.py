@@ -220,21 +220,21 @@ def main(argv):
     os.system("mkdir {}".format(scratch_dir))
 
     # cpu_processes = FLAGS.cpu_nodes * ROCKFISH_CPU_CORE_PER_NODE // FLAGS.cpu
-    cpu_processes = ROCKFISH_CPU_CORE_PER_NODE // FLAGS.cpu
-    cpu_memory = f"{ROCKFISH_CPU_MEM_PER_CORE * FLAGS.cpu}GB"
-    cpu_cluster = SLURMCluster(
-        cores=ROCKFISH_CPU_CORE_PER_NODE,
-        job_cpu=ROCKFISH_CPU_CORE_PER_NODE,
-        processes=cpu_processes,
-        memory=cpu_memory,
-        queue="defq",
-        local_directory=scratch_dir,
-        walltime="40:00:00",
-        job_extra=["-o {}".format(os.path.join(scratch_dir, "slurm-%j.out"))],
-    )
-    print(cpu_cluster.job_script())
-    cpu_cluster.scale(FLAGS.cpu_nodes)
-    cpu_client = Client(cpu_cluster)
+    # cpu_processes = ROCKFISH_CPU_CORE_PER_NODE // FLAGS.cpu
+    # cpu_memory = f"{ROCKFISH_CPU_MEM_PER_CORE * FLAGS.cpu}GB"
+    # cpu_cluster = SLURMCluster(
+    #     cores=ROCKFISH_CPU_CORE_PER_NODE,
+    #     job_cpu=ROCKFISH_CPU_CORE_PER_NODE,
+    #     processes=cpu_processes,
+    #     memory=cpu_memory,
+    #     queue="defq",
+    #     local_directory=scratch_dir,
+    #     walltime="40:00:00",
+    #     job_extra=["-o {}".format(os.path.join(scratch_dir, "slurm-%j.out"))],
+    # )
+    # print(cpu_cluster.job_script())
+    # cpu_cluster.scale(FLAGS.cpu_nodes)
+    # cpu_client = Client(cpu_cluster)
 
     # gpu_cpus = ROCKFISH_CPU_CORE_PER_NODE // FLAGS.gpu_jobs
     # gpu_memory = f"{ROCKFISH_GPU_MEM_PER_CORE * gpu_cpus}GB"

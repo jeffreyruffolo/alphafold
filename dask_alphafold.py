@@ -124,7 +124,7 @@ FLAGS = flags.FLAGS
 
 ROCKFISH_CPU_CORE_PER_NODE = 48
 ROCKFISH_CPU_MEM_PER_CORE = 4
-ROCKFISH_GPU_COR_PER_NODE = 48
+ROCKFISH_GPU_COR_PER_NODE = 12
 ROCKFISH_GPU_MEM_PER_CORE = 4
 
 
@@ -208,10 +208,6 @@ def main(argv):
     if len(fasta_names) != len(set(fasta_names)):
         raise ValueError('All FASTA paths must have a unique basename.')
 
-    # Predict structure for each of the sequences.
-    for i, fasta_path in tqdm(enumerate(fasta_paths), total=len(fasta_paths)):
-        print(fasta_path)
-
     user_home_dir = "/home/jruffol1"
     scratch_dir = os.path.join(user_home_dir, "scratch")
     os.system("mkdir {}".format(scratch_dir))
@@ -241,7 +237,10 @@ def main(argv):
         local_directory=scratch_dir,
         walltime="40:00:00",
         scheduler_options={"dashboard_address": ":16007"},
-        job_extra=["-o {}".format(os.path.join(scratch_dir, "slurm-%j.out"))],
+        job_extra=[
+            "--account=jgray21_gpu ----gres=gpu:1 -o {}".format(
+                os.path.join(scratch_dir, "slurm-%j.out"))
+        ],
     )
     gpu_cluster.scale(FLAGS.gpu_nodes)
     gpu_client = Client(gpu_cluster)

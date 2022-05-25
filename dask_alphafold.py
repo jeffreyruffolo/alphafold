@@ -219,12 +219,12 @@ def main(argv):
     scratch_dir = os.path.join(user_home_dir, "scratch")
     os.system("mkdir {}".format(scratch_dir))
 
-    cpu_processes = FLAGS.cpu_nodes * ROCKFISH_CPU_CORE_PER_NODE // FLAGS.cpu
-    job_cpu = ROCKFISH_CPU_CORE_PER_NODE // FLAGS.cpu
+    # cpu_processes = FLAGS.cpu_nodes * ROCKFISH_CPU_CORE_PER_NODE // FLAGS.cpu
+    cpu_processes = ROCKFISH_CPU_CORE_PER_NODE // FLAGS.cpu
     cpu_memory = f"{ROCKFISH_CPU_MEM_PER_CORE * FLAGS.cpu}GB"
     cpu_cluster = SLURMCluster(
-        cores=FLAGS.cpu,
-        job_cpu=job_cpu,
+        cores=ROCKFISH_CPU_CORE_PER_NODE,
+        job_cpu=ROCKFISH_CPU_CORE_PER_NODE,
         processes=cpu_processes,
         memory=cpu_memory,
         queue="defq",

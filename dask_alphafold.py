@@ -257,7 +257,8 @@ def main(argv):
          FLAGS.cpu, FLAGS.no_amber, FLAGS.no_msa, FLAGS.recycles)
         for fasta_file in fasta_paths
     ]
-    preprocess_results = cpu_client.map(preprocess_sequence, cpu_args)
+    # preprocess_results = cpu_client.map(preprocess_sequence, cpu_args)
+    [preprocess_sequence(args) for args in cpu_args]
 
     # for fasta_file in tqdm(fasta_paths, total=len(fasta_paths)):
     #     cpu_result = cpu_client.submit(preprocess_sequence, cpu_args)

@@ -238,7 +238,7 @@ def main(argv):
         walltime="40:00:00",
         scheduler_options={"dashboard_address": ":16007"},
         job_extra=[
-            "--account=jgray21_gpu ----gres=gpu:1 -o {}".format(
+            "--account=jgray21_gpu --gres=gpu:1 -o {}".format(
                 os.path.join(scratch_dir, "slurm-%j.out"))
         ],
     )

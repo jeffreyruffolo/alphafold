@@ -78,33 +78,9 @@ flags.DEFINE_string('hmmbuild_binary_path', shutil.which('hmmbuild'),
                     'Path to the hmmbuild executable.')
 flags.DEFINE_string('kalign_binary_path', shutil.which('kalign'),
                     'Path to the Kalign executable.')
-flags.DEFINE_string('uniref90_database_path', None, 'Path to the Uniref90 '
-                    'database for use by JackHMMER.')
-flags.DEFINE_string('mgnify_database_path', None, 'Path to the MGnify '
-                    'database for use by JackHMMER.')
-flags.DEFINE_string('bfd_database_path', None, 'Path to the BFD '
-                    'database for use by HHblits.')
-flags.DEFINE_string(
-    'small_bfd_database_path', None, 'Path to the small '
-    'version of BFD used with the "reduced_dbs" preset.')
-flags.DEFINE_string('uniclust30_database_path', None, 'Path to the Uniclust30 '
-                    'database for use by HHblits.')
-flags.DEFINE_string('uniprot_database_path', None, 'Path to the Uniprot '
-                    'database for use by JackHMMer.')
-flags.DEFINE_string('pdb70_database_path', None, 'Path to the PDB70 '
-                    'database for use by HHsearch.')
-flags.DEFINE_string('pdb_seqres_database_path', None, 'Path to the PDB '
-                    'seqres database for use by hmmsearch.')
-flags.DEFINE_string(
-    'template_mmcif_dir', None, 'Path to a directory with '
-    'template mmCIF structures, each named <pdb_id>.cif')
 flags.DEFINE_string(
     'max_template_date', '9999-12-31', 'Maximum template release date '
     'to consider. Important if folding historical test sets.')
-flags.DEFINE_string(
-    'obsolete_pdbs_path', None, 'Path to file containing a '
-    'mapping from obsolete PDB IDs to the PDB IDs of their '
-    'replacements.')
 flags.DEFINE_enum(
     'db_preset', 'full_dbs', ['full_dbs', 'reduced_dbs'],
     'Choose preset MSA database configuration - '
@@ -133,7 +109,7 @@ flags.DEFINE_boolean(
     'if the sequence, database or configuration have changed.')
 flags.DEFINE_integer('recycles', 3, '')
 flags.DEFINE_integer('parallel', 1, '')
-flags.DEFINE_integer('cpu', 8, '')
+flags.DEFINE_integer('cpu', 3, '')
 flags.DEFINE_boolean('preprocess', False, '')
 flags.DEFINE_boolean('no_amber', False, '')
 flags.DEFINE_boolean('no_msa', False, '')

@@ -124,7 +124,7 @@ FLAGS = flags.FLAGS
 
 ROCKFISH_CPU_CORE_PER_NODE = 48
 ROCKFISH_CPU_MEM_PER_CORE = 4
-ROCKFISH_GPU_COR_PER_NODE = 12
+ROCKFISH_GPU_CORE_PER_NODE = 12
 ROCKFISH_GPU_MEM_PER_CORE = 4
 
 
@@ -150,7 +150,7 @@ def preprocess_sequence(args):
         --no_msa {no_msa}
         --recycles {recycles}
         --preprocess
-    """
+    """.replace("\n", " ")
 
     os.system(preprocess_command)
 
@@ -175,7 +175,7 @@ def predict_structure(args):
         --no_amber {no_amber}
         --no_msa {no_msa}
         --recycles {recycles}
-    """
+    """.replace("\n", " ")
 
     os.system(predict_command)
 
@@ -212,7 +212,7 @@ def main(argv):
     scratch_dir = os.path.join(user_home_dir, "scratch")
     os.system("mkdir {}".format(scratch_dir))
 
-    cpu_processes = ROCKFISH_CPU_CORE_PER_NODE // FLAGS.cpu
+    cpu_processes = FLAGS.cpu_nodes * ROCKFISH_CPU_CORE_PER_NODE // FLAGS.cpu
     cpu_memory = f"{ROCKFISH_CPU_MEM_PER_CORE * FLAGS.cpu}GB"
     cpu_cluster = SLURMCluster(
         cores=FLAGS.cpu,

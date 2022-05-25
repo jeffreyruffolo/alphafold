@@ -139,7 +139,7 @@ def migrate_data(data_dir, local_disk):
 @dask.delayed
 def preprocess_sequence(args):
     fasta_file, output_dir, data_dir, model_preset, cpu, no_amber, no_msa, recycles = args
-    migrate_data(data_dir, "/tmp/")
+    # migrate_data(data_dir, "/tmp/")
 
     preprocess_command = f"""
         python run_alphafold.py
@@ -223,29 +223,27 @@ def main(argv):
         queue="defq",
         local_directory=scratch_dir,
         walltime="40:00:00",
-        scheduler_options={"dashboard_address": ":16007"},
         job_extra=["-o {}".format(os.path.join(scratch_dir, "slurm-%j.out"))],
     )
     cpu_cluster.scale(FLAGS.cpu_nodes)
     cpu_client = Client(cpu_cluster)
 
-    gpu_cpus = ROCKFISH_CPU_CORE_PER_NODE // FLAGS.gpu_jobs
-    gpu_memory = f"{ROCKFISH_GPU_MEM_PER_CORE * gpu_cpus}GB"
-    gpu_cluster = SLURMCluster(
-        cores=gpu_cpus,
-        processes=FLAGS.gpu_jobs,
-        memory=gpu_memory,
-        queue="a100",
-        local_directory=scratch_dir,
-        walltime="40:00:00",
-        scheduler_options={"dashboard_address": ":16007"},
-        job_extra=[
-            "--account=jgray21_gpu --gres=gpu:1 -o {}".format(
-                os.path.join(scratch_dir, "slurm-%j.out"))
-        ],
-    )
-    gpu_cluster.scale(FLAGS.gpu_nodes)
-    gpu_client = Client(gpu_cluster)
+    # gpu_cpus = ROCKFISH_CPU_CORE_PER_NODE // FLAGS.gpu_jobs
+    # gpu_memory = f"{ROCKFISH_GPU_MEM_PER_CORE * gpu_cpus}GB"
+    # gpu_cluster = SLURMCluster(
+    #     cores=gpu_cpus,
+    #     processes=FLAGS.gpu_jobs,
+    #     memory=gpu_memory,
+    #     queue="a100",
+    #     local_directory=scratch_dir,
+    #     walltime="40:00:00",
+    #     job_extra=[
+    #         "--account=jgray21_gpu --gres=gpu:1 -o {}".format(
+    #             os.path.join(scratch_dir, "slurm-%j.out"))
+    #     ],
+    # )
+    # gpu_cluster.scale(FLAGS.gpu_nodes)
+    # gpu_client = Client(gpu_cluster)
 
     preprocess_results = []
     for fasta_file in tqdm(fasta_paths, total=len(fasta_paths)):

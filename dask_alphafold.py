@@ -154,6 +154,9 @@ def preprocess_sequence(args):
         --preprocess
     """.replace("\n", " ")
 
+    os.system(f"cp {fasta_file} {output_dir}")
+    return args, True
+
     logging.log(logging.INFO, f"Running {preprocess_command}")
     os.system(preprocess_command)
 

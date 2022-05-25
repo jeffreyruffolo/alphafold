@@ -134,19 +134,20 @@ def migrate_data(data_dir, local_disk):
 
 
 @dask.delayed
-def preprocess_sequence(fasta_file):
+def preprocess_sequence(args):
+    fasta_file, output_dir, data_dir, model_preset, cpu, no_amber, no_msa, recycles = args
     migrate_data(FLAGS.data_dir, "/tmp/")
 
     preprocess_command = f"""
         python run_alphafold.py
         --fasta_paths {fasta_file}
-        --output_dir {FLAGS.output_dir}
-        --data_dir {FLAGS.data_dir}
-        --model_preset {FLAGS.model_preset}
-        --cpu {FLAGS.cpu}
-        --no_amber {FLAGS.no_amber}
-        --no_msa {FLAGS.no_msa}
-        --recycles {FLAGS.recycles}
+        --output_dir {output_dir}
+        --data_dir {data_dir}
+        --model_preset {model_preset}
+        --cpu {cpu}
+        --no_amber {no_amber}
+        --no_msa {no_msa}
+        --recycles {recycles}
         --preprocess
     """
 
@@ -155,13 +156,14 @@ def preprocess_sequence(fasta_file):
     fasta_name = os.path.splitext(os.path.basename(fasta_file))[0]
     result_dir = os.path.join(FLAGS.output_dir, fasta_name, "msa")
     if os.path.isdir(result_dir):
-        return fasta_file, True
+        return args, True
     else:
-        return fasta_file, False
+        return args, False
 
 
-def predict_structure(preprocess_results):
-    fasta_file, preprocess_success = preprocess_results
+def predict_structure(args):
+    (fasta_file, output_dir, data_dir, model_preset, cpu, no_amber, no_msa,
+     recycles), preprocess_success = args
     if not preprocess_success:
         logging.log(logging.INFO, f"{fasta_file} failed preprocessing")
         return False
@@ -169,13 +171,13 @@ def predict_structure(preprocess_results):
     predict_command = f"""
         python run_alphafold.py
         --fasta_paths {fasta_file}
-        --output_dir {FLAGS.output_dir}
-        --data_dir {FLAGS.data_dir}
-        --model_preset {FLAGS.model_preset}
-        --cpu {FLAGS.cpu}
-        --no_amber {FLAGS.no_amber}
-        --no_msa {FLAGS.no_msa}
-        --recycles {FLAGS.recycles}
+        --output_dir {output_dir}
+        --data_dir {data_dir}
+        --model_preset {model_preset}
+        --cpu {cpu}
+        --no_amber {no_amber}
+        --no_msa {no_msa}
+        --recycles {recycles}
     """
 
     os.system(predict_command)
@@ -249,7 +251,10 @@ def main(argv):
 
     prediction_results = []
     for fasta_file in tqdm(fasta_paths, total=len(fasta_paths)):
-        cpu_result = cpu_client.submit(preprocess_sequence, fasta_file)
+        cpu_args = (fasta_file, FLAGS.output_dir, FLAGS.data_dir,
+                    FLAGS.model_preset, FLAGS.cpu, FLAGS.no_amber,
+                    FLAGS.no_msa, FLAGS.recycles)
+        cpu_result = cpu_client.submit(preprocess_sequence, cpu_args)
         gpu_result = gpu_client.submit(predict_structure, cpu_result)
         prediction_results.append(gpu_result)
 

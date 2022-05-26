@@ -216,7 +216,7 @@ def main(argv):
     gpu_mem = f"{ROCKFISH_GPU_MEM_PER_NODE}GB"
     gpu_cluster = SLURMCluster(
         cores=FLAGS.gpu_jobs,
-        job_cpu=ROCKFISH_CPU_CORE_PER_NODE,
+        job_cpu=ROCKFISH_GPU_CORE_PER_NODE,
         memory=gpu_mem,
         processes=1,
         queue="a100",

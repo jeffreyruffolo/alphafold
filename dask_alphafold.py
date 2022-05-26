@@ -271,8 +271,8 @@ def main(argv):
             if not success:
                 logging.log(logging.INFO, f"{gpu_args[0]} failed prediction")
 
-            gpu_args = [a for a in gpu_args if a[0]]
-            prediction_results.append(predict_structure(gpu_args))
+        gpu_args = [a for _, (a, s) in batch if s]
+        prediction_results.append(predict_structure(gpu_args))
 
     wait(prediction_results)
 

@@ -168,9 +168,9 @@ def predict_structure(args):
         result_pdb = os.path.join(output_dir, fasta_name, "ranked_0.pdb")
         if not os.path.exists(result_pdb):
             logging.log(logging.INFO, f"{fasta_file} failed prediction")
-            return False
+            return args, False
 
-    return True
+    return args, True
 
 
 def main(argv):
@@ -239,7 +239,9 @@ def main(argv):
     ]
     preprocess_results = cpu_client.map(preprocess_sequence, cpu_args)
 
-    pbar = tqdm(total=len(fasta_paths))
+    preprocess_pbar = tqdm(total=len(fasta_paths))
+    predict_pbar = tqdm(total=len(fasta_paths))
+
     prediction_results = []
     for batch in as_completed(preprocess_results, with_results=True).batches():
         batch = list(batch)
@@ -248,12 +250,15 @@ def main(argv):
                 logging.log(logging.INFO, f"{gpu_args[0]} failed prediction")
 
         gpu_args = [a for _, (a, s) in batch if s]
-        pbar.update(len(gpu_args))
+        preprocess_pbar.update(len(gpu_args))
 
         batch_results = gpu_client.submit(predict_structure, gpu_args)
         prediction_results.append(batch_results)
 
-    wait(prediction_results)
+    for _, (args, success) in as_completed(prediction_results,
+                                           with_results=True):
+        if success:
+            predict_pbar.update(len(args))
 
 
 if __name__ == '__main__':

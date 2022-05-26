@@ -45,7 +45,7 @@ from alphafold.model import model
 from alphafold.relax import relax
 import numpy as np
 import dask
-from dask.distributed import Client, wait
+from dask.distributed import Client, as_completed
 from dask_jobqueue import SLURMCluster
 
 from alphafold.model import data
@@ -224,7 +224,6 @@ def main(argv):
     cpu_memory = f"{ROCKFISH_CPU_MEM_PER_CORE * FLAGS.cpu}GB"
     cpu_cluster = SLURMCluster(
         cores=ROCKFISH_CPU_CORE_PER_NODE,
-        job_cpu=ROCKFISH_CPU_CORE_PER_NODE,
         processes=cpu_processes,
         memory=cpu_memory,
         queue="defq",
@@ -260,7 +259,7 @@ def main(argv):
         for fasta_file in fasta_paths
     ]
     preprocess_results = cpu_client.submit(preprocess_sequence, cpu_args)
-    print(cpu_client.gather(preprocess_results))
+    # print(cpu_client.gather(preprocess_results))
     # [preprocess_sequence(args) for args in cpu_args]
 
     # for fasta_file in tqdm(fasta_paths, total=len(fasta_paths)):
@@ -286,6 +285,10 @@ def main(argv):
     #         pbar.update(1)
     #     else:
     #         predict_queue.put((fasta_file, preprocess_result))
+
+    for batch in as_completed(preprocess_results, with_results=True).batches():
+        for future, result in batch:
+            print(result)
 
     # wait(prediction_results)
 

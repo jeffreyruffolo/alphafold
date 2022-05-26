@@ -219,7 +219,8 @@ def main(argv):
     cpu_mem = f"{4 * FLAGS.cpu}GB"
     print(cpu_processes)
     cpu_cluster = SLURMCluster(
-        cores=FLAGS.cpu,
+        cores=1,
+        job_cpu=FLAGS.cpu,
         memory=cpu_mem,
         processes=1,
         queue="defq",

@@ -218,7 +218,7 @@ def main(argv):
     cpu_processes = ROCKFISH_CPU_CORE_PER_NODE // FLAGS.cpu
     cpu_cluster = SLURMCluster(
         cores=ROCKFISH_CPU_CORE_PER_NODE,
-        memory=ROCKFISH_CPU_MEM_PER_NODE,
+        memory=f"{ROCKFISH_CPU_MEM_PER_NODE}GB",
         processes=cpu_processes,
         queue="defq",
         local_directory=scratch_dir,
@@ -233,7 +233,7 @@ def main(argv):
     # gpu_memory = f"{ROCKFISH_GPU_MEM_PER_CORE * gpu_cpus}GB"
     # gpu_cluster = SLURMCluster(
     #     cores=ROCKFISH_CPU_CORE_PER_NODE,
-    #     memory=ROCKFISH_GPU_MEM_PER_NODE,
+    # memory=f"{ROCKFISH_GPU_MEM_PER_NODE}GB",
     #     processes=FLAGS.gpu_jobs,
     #     queue="a100",
     #     local_directory=scratch_dir,

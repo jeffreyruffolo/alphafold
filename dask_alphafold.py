@@ -216,12 +216,12 @@ def main(argv):
     os.system("mkdir {}".format(scratch_dir))
 
     cpu_processes = ROCKFISH_CPU_CORE_PER_NODE // FLAGS.cpu
+    cpu_mem = f"{4 * FLAGS.cpu}GB"
     print(cpu_processes)
     cpu_cluster = SLURMCluster(
-        n_workers=FLAGS.cpu_nodes,
-        cores=ROCKFISH_CPU_CORE_PER_NODE,
-        memory=f"{ROCKFISH_CPU_MEM_PER_NODE}GB",
-        processes=cpu_processes,
+        cores=FLAGS.cpu,
+        memory=cpu_mem,
+        processes=1,
         queue="defq",
         local_directory=scratch_dir,
         walltime="40:00:00",

@@ -216,6 +216,7 @@ def main(argv):
     os.system("mkdir {}".format(scratch_dir))
 
     cpu_processes = ROCKFISH_CPU_CORE_PER_NODE // FLAGS.cpu
+    print(cpu_processes)
     cpu_cluster = SLURMCluster(
         cores=ROCKFISH_CPU_CORE_PER_NODE,
         memory=f"{ROCKFISH_CPU_MEM_PER_NODE}GB",

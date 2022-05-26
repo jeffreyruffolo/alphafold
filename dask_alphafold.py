@@ -143,7 +143,8 @@ def preprocess_sequence(args):
 
 
 def predict_structure(args):
-    _, output_dir, data_dir, model_preset, cpu, no_amber, no_msa, recycles = args
+    _, output_dir, data_dir, model_preset, cpu, no_amber, no_msa, recycles = args[
+        0]
     fasta_files = ",".join([a[0] for a in args])
 
     predict_command = f"""

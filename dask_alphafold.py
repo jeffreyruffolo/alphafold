@@ -136,7 +136,6 @@ def migrate_data(data_dir, local_disk):
         os.system(f"tar -xf {data_dir} -C {local_disk}")
 
 
-@dask.delayed
 def preprocess_sequence(args):
     fasta_file, output_dir, data_dir, model_preset, cpu, no_amber, no_msa, recycles = args
     # migrate_data(data_dir, "/tmp/")

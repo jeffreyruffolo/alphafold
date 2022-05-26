@@ -218,6 +218,7 @@ def main(argv):
     cpu_processes = ROCKFISH_CPU_CORE_PER_NODE // FLAGS.cpu
     print(cpu_processes)
     cpu_cluster = SLURMCluster(
+        n_workers=FLAGS.cpu_nodes,
         cores=ROCKFISH_CPU_CORE_PER_NODE,
         memory=f"{ROCKFISH_CPU_MEM_PER_NODE}GB",
         processes=cpu_processes,

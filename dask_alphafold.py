@@ -227,7 +227,7 @@ def main(argv):
                 os.path.join(scratch_dir, "slurm-%j.out"))
         ],
     )
-    print(cpu_cluster.job_script())
+    print(gpu_cluster.job_script())
     gpu_cluster.scale(FLAGS.gpu_nodes)
     gpu_client = Client(gpu_cluster)
 
@@ -273,7 +273,8 @@ def main(argv):
                 logging.log(logging.INFO, f"{gpu_args[0]} failed prediction")
 
         gpu_args = [a for _, (a, s) in batch if s]
-        prediction_results.append(predict_structure(gpu_args))
+        batch_results = gpu_client.map(predict_structure, gpu_args)
+        prediction_results.extend(batch_results)
 
     wait(prediction_results)
 

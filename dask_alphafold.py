@@ -12,43 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Full AlphaFold protein structure prediction script."""
-import json
 import os
 import pathlib
-import pickle
-import random
 import shutil
-import sys
-import time
-import queue
-from typing import Dict, Union, Optional, List, Tuple
-from bisect import bisect
 from glob import glob
 from tqdm import tqdm
 from tqdm.contrib.concurrent import process_map
-import haiku
+
+import numpy as np
+import dask
+from dask.distributed import Client, as_completed, wait
+from dask_jobqueue import SLURMCluster
 
 from absl import app
 from absl import flags
 from absl import logging
-from alphafold.common import protein
-from alphafold.common import residue_constants
-from alphafold.data import pipeline
-from alphafold.data import pipeline_multimer
-from alphafold.data import templates
-from alphafold.data.tools import hhsearch
-from alphafold.data.tools import hmmsearch
-from alphafold.efficient_folding.load_models import load_models_and_params
-from alphafold.efficient_folding.pad_inputs import pad_inputs
-from alphafold.model import config
-from alphafold.model import model
-from alphafold.relax import relax
-import numpy as np
-import dask
-from dask.distributed import Client, as_completed
-from dask_jobqueue import SLURMCluster
-
-from alphafold.model import data
 # Internal import (7716).
 
 logging.set_verbosity(logging.INFO)
@@ -165,11 +143,12 @@ def preprocess_sequence(args):
 
 
 def predict_structure(args):
-    fasta_file, output_dir, data_dir, model_preset, cpu, no_amber, no_msa, recycles = args
+    _, output_dir, data_dir, model_preset, cpu, no_amber, no_msa, recycles = args
+    fasta_files = ",".join([a[0] for a in args])
 
     predict_command = f"""
         python run_alphafold.py
-        --fasta_paths {fasta_file}
+        --fasta_paths {fasta_files}
         --output_dir {output_dir}
         --data_dir {data_dir}
         --model_preset {model_preset}
@@ -182,13 +161,14 @@ def predict_structure(args):
     logging.log(logging.INFO, f"Running {predict_command}")
     os.system(predict_command)
 
-    fasta_name = os.path.splitext(os.path.basename(fasta_file))[0]
-    result_pdb = os.path.join(output_dir, fasta_name, "ranked_0.pdb")
-    if os.path.exists(result_pdb):
-        return True
-    else:
-        logging.log(logging.INFO, f"{fasta_file} failed prediction")
-        return False
+    for fasta_file in fasta_files:
+        fasta_name = os.path.splitext(os.path.basename(fasta_file))[0]
+        result_pdb = os.path.join(output_dir, fasta_name, "ranked_0.pdb")
+        if not os.path.exists(result_pdb):
+            logging.log(logging.INFO, f"{fasta_file} failed prediction")
+            return False
+
+    return True
 
 
 def main(argv):
@@ -232,23 +212,22 @@ def main(argv):
     cpu_cluster.scale(FLAGS.cpu_nodes)
     cpu_client = Client(cpu_cluster)
 
-    # gpu_cpus = ROCKFISH_CPU_CORE_PER_NODE // FLAGS.gpu_jobs
-    # gpu_memory = f"{ROCKFISH_GPU_MEM_PER_CORE * gpu_cpus}GB"
-    # gpu_cluster = SLURMCluster(
-    #     cores=ROCKFISH_CPU_CORE_PER_NODE,
-    # memory=f"{ROCKFISH_GPU_MEM_PER_NODE}GB",
-    #     processes=FLAGS.gpu_jobs,
-    #     queue="a100",
-    #     local_directory=scratch_dir,
-    #     walltime="40:00:00",
-    #     job_extra=[
-    #         "--account=jgray21_gpu --gres=gpu:1 -o {}".format(
-    #             os.path.join(scratch_dir, "slurm-%j.out"))
-    #     ],
-    # )
-    # print(cpu_cluster.job_script())
-    # gpu_cluster.scale(FLAGS.gpu_nodes)
-    # gpu_client = Client(gpu_cluster)
+    gpu_cluster = SLURMCluster(
+        cores=FLAGS.gpu_jobs,
+        job_cpu=ROCKFISH_CPU_CORE_PER_NODE,
+        memory=ROCKFISH_GPU_MEM_PER_NODE,
+        processes=1,
+        queue="a100",
+        local_directory=scratch_dir,
+        walltime="40:00:00",
+        job_extra=[
+            "--account=jgray21_gpu --gres=gpu:1 -o {}".format(
+                os.path.join(scratch_dir, "slurm-%j.out"))
+        ],
+    )
+    print(cpu_cluster.job_script())
+    gpu_cluster.scale(FLAGS.gpu_nodes)
+    gpu_client = Client(gpu_cluster)
 
     cpu_args = [
         (fasta_file, FLAGS.output_dir, FLAGS.data_dir, FLAGS.model_preset,
@@ -283,15 +262,18 @@ def main(argv):
     #     else:
     #         predict_queue.put((fasta_file, preprocess_result))
 
+    pbar = tqdm(total=len(fasta_paths))
+    prediction_results = []
     for batch in as_completed(preprocess_results, with_results=True).batches():
         for _, (gpu_args, success) in batch:
+            pbar.update(len(batch))
             if not success:
                 logging.log(logging.INFO, f"{gpu_args[0]} failed prediction")
 
-    #     gpu_args = [a for a in gpu_args if a[0]]
-    #     predict_structure(gpu_args)
+            gpu_args = [a for a in gpu_args if a[0]]
+            prediction_results.append(predict_structure(gpu_args))
 
-    # wait(prediction_results)
+    wait(prediction_results)
 
 
 if __name__ == '__main__':

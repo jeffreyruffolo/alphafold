@@ -123,9 +123,9 @@ flags.DEFINE_boolean('no_msa', False, '')
 FLAGS = flags.FLAGS
 
 ROCKFISH_CPU_CORE_PER_NODE = 48
-ROCKFISH_CPU_MEM_PER_CORE = 4
+ROCKFISH_CPU_MEM_PER_NODE = 192
 ROCKFISH_GPU_CORE_PER_NODE = 12
-ROCKFISH_GPU_MEM_PER_CORE = 4
+ROCKFISH_GPU_MEM_PER_NODE = 48
 
 
 def migrate_data(data_dir, local_disk):
@@ -215,13 +215,11 @@ def main(argv):
     scratch_dir = os.path.join(user_home_dir, "scratch")
     os.system("mkdir {}".format(scratch_dir))
 
-    # cpu_processes = FLAGS.cpu_nodes * ROCKFISH_CPU_CORE_PER_NODE // FLAGS.cpu
     cpu_processes = ROCKFISH_CPU_CORE_PER_NODE // FLAGS.cpu
-    cpu_memory = f"{ROCKFISH_CPU_MEM_PER_CORE * FLAGS.cpu}GB"
     cpu_cluster = SLURMCluster(
         cores=ROCKFISH_CPU_CORE_PER_NODE,
+        memory=ROCKFISH_CPU_MEM_PER_NODE,
         processes=cpu_processes,
-        memory=cpu_memory,
         queue="defq",
         local_directory=scratch_dir,
         walltime="40:00:00",
@@ -234,9 +232,9 @@ def main(argv):
     # gpu_cpus = ROCKFISH_CPU_CORE_PER_NODE // FLAGS.gpu_jobs
     # gpu_memory = f"{ROCKFISH_GPU_MEM_PER_CORE * gpu_cpus}GB"
     # gpu_cluster = SLURMCluster(
-    #     cores=gpu_cpus,
+    #     cores=ROCKFISH_CPU_CORE_PER_NODE,
+    #     memory=ROCKFISH_GPU_MEM_PER_NODE,
     #     processes=FLAGS.gpu_jobs,
-    #     memory=gpu_memory,
     #     queue="a100",
     #     local_directory=scratch_dir,
     #     walltime="40:00:00",
@@ -284,7 +282,6 @@ def main(argv):
 
     for batch in as_completed(preprocess_results, with_results=True).batches():
         for _, (gpu_args, success) in batch:
-            print(success)
             if not success:
                 logging.log(logging.INFO, f"{gpu_args[0]} failed prediction")
 

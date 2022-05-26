@@ -443,17 +443,18 @@ def main(argv):
     else:
         data_pipeline = monomer_data_pipeline
 
-    model_runner_sizes = [100, 200, 500, 1000, 2000]
+    model_runner_sizes = [100, 200, 400]
     model_runner_cache = {}
-    for s in model_runner_sizes:
-        model_names = config.MODEL_PRESETS[FLAGS.model_preset]
-        model_runner_cache[s] = load_models_and_params(
-            num_models=len(model_names),
-            use_templates=True,
-            num_recycle=FLAGS.recycles,
-            num_ensemble=num_ensemble,
-            data_dir=data_dir,
-        )
+    if not FLAGS.preprocess:
+        for s in model_runner_sizes:
+            model_names = config.MODEL_PRESETS[FLAGS.model_preset]
+            model_runner_cache[s] = load_models_and_params(
+                num_models=len(model_names),
+                use_templates=True,
+                num_recycle=FLAGS.recycles,
+                num_ensemble=num_ensemble,
+                data_dir=data_dir,
+            )
 
     # logging.info('Have %d models: %s', len(model_runners),
     #              list(model_runners.keys()))

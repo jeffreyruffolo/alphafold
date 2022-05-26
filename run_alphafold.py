@@ -445,9 +445,9 @@ def main(argv):
 
     model_runner_sizes = [100, 200, 400]
     model_runner_cache = {}
-    if not FLAGS.preprocess:
-        for s in model_runner_sizes:
-            model_names = config.MODEL_PRESETS[FLAGS.model_preset]
+    for s in model_runner_sizes:
+        model_names = config.MODEL_PRESETS[FLAGS.model_preset]
+        if not FLAGS.preprocess:
             model_runner_cache[s] = load_models_and_params(
                 num_models=len(model_names),
                 use_templates=True,

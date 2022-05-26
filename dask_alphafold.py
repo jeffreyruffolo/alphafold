@@ -154,9 +154,6 @@ def preprocess_sequence(args):
         --preprocess
     """.replace("\n", " ")
 
-    os.system(f"cp {fasta_file} {output_dir}")
-    return args, True
-
     logging.log(logging.INFO, f"Running {preprocess_command}")
     os.system(preprocess_command)
 
@@ -287,8 +284,13 @@ def main(argv):
     #         predict_queue.put((fasta_file, preprocess_result))
 
     for batch in as_completed(preprocess_results, with_results=True).batches():
-        for future, result in batch:
-            print(result)
+        for _, (success, gpu_args) in batch:
+            print(success)
+            if not success:
+                logging.log(logging.INFO, f"{gpu_args[0]} failed prediction")
+
+    #     gpu_args = [a for a in gpu_args if a[0]]
+    #     predict_structure(gpu_args)
 
     # wait(prediction_results)
 

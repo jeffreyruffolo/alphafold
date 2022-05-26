@@ -283,7 +283,7 @@ def main(argv):
     #         predict_queue.put((fasta_file, preprocess_result))
 
     for batch in as_completed(preprocess_results, with_results=True).batches():
-        for _, (success, gpu_args) in batch:
+        for _, (gpu_args, success) in batch:
             print(success)
             if not success:
                 logging.log(logging.INFO, f"{gpu_args[0]} failed prediction")

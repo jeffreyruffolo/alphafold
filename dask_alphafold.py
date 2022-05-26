@@ -251,7 +251,7 @@ def main(argv):
         pbar.update(len(gpu_args))
 
         batch_results = gpu_client.submit(predict_structure, gpu_args)
-        prediction_results.extend(batch_results)
+        prediction_results.append(batch_results)
 
     wait(prediction_results)
 

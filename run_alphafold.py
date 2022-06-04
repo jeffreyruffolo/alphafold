@@ -443,7 +443,7 @@ def main(argv):
     else:
         data_pipeline = monomer_data_pipeline
 
-    model_runner_sizes = [100, 200, 400]
+    model_runner_sizes = [100, 200, 400, 600]
     model_runner_cache = {}
     for s in model_runner_sizes:
         model_names = config.MODEL_PRESETS[FLAGS.model_preset]

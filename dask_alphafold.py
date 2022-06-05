@@ -256,7 +256,7 @@ def main(argv):
                 logging.log(logging.INFO, f"{gpu_args[0]} failed prediction")
 
         batch_list.extend(batch)
-        if len(batch_list) == 20:
+        if len(batch_list) > 20:
             gpu_args = [a for _, (a, s) in batch_list if s]
             preprocess_pbar.update(len(gpu_args))
 

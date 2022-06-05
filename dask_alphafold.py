@@ -146,11 +146,16 @@ def predict_structure(args):
     logging.log(logging.INFO, len(args), len(args[0]))
     _, output_dir, data_dir, model_preset, cpu, no_amber, no_msa, recycles = args[
         0]
-    fasta_files = ",".join([a[0] for a in args])
+    fasta_files = [a[0] for a in args]
+
+    temp_fasta_dir = os.path.join(output_dir, "temp_fasta")
+    os.makedirs(temp_fasta_dir, exist_ok=True)
+    for fasta_file in fasta_files:
+        os.system(f"cp {fasta_file} {temp_fasta_dir}")
 
     predict_command = f"""
         python run_alphafold.py
-        --fasta_paths {fasta_files}
+        --fasta_paths {temp_fasta_dir}
         --output_dir {output_dir}
         --data_dir {data_dir}
         --model_preset {model_preset}

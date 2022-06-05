@@ -260,7 +260,6 @@ def main(argv):
             gpu_args = [a for _, (a, s) in batch_list if s]
             preprocess_pbar.update(len(gpu_args))
 
-            print(gpu_args)
             batch_results = gpu_client.submit(predict_structure, gpu_args)
             prediction_results.append(batch_results)
 

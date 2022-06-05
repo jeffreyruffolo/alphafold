@@ -256,10 +256,12 @@ def main(argv):
             if not success:
                 logging.log(logging.INFO, f"{gpu_args[0]} failed prediction")
 
+        preprocess_pbar.update(len(batch))
         batch_list.extend(batch)
-        if len(batch_list) > 20:
+        almost_done = len(prediction_results) + len(batch) > len(
+            preprocess_results) - 50
+        if len(batch_list) > 50 or almost_done:
             gpu_args = [a for _, (a, s) in batch_list if s]
-            preprocess_pbar.update(len(gpu_args))
 
             batch_results = gpu_client.submit(predict_structure, gpu_args)
             prediction_results.append(batch_results)

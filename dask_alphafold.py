@@ -252,7 +252,7 @@ def main(argv):
 
         batch_list.extend(batch)
         if len(batch_list) == 20:
-            gpu_args = [a for _, (a, s) in batch if s]
+            gpu_args = [a for _, (a, s) in batch_list if s]
             preprocess_pbar.update(len(gpu_args))
 
             batch_results = gpu_client.submit(predict_structure, gpu_args)

@@ -148,7 +148,8 @@ def predict_structure(args):
         0]
     fasta_files = [a[0] for a in args]
 
-    temp_fasta_dir = os.path.join(output_dir, "temp_fasta")
+    temp_id = os.path.splitext(os.path.basename(fasta_files[0]))[0]
+    temp_fasta_dir = os.path.join(output_dir, f"temp_fasta_{temp_id}")
     os.makedirs(temp_fasta_dir, exist_ok=True)
     for fasta_file in fasta_files:
         os.system(f"cp {fasta_file} {temp_fasta_dir}")

@@ -243,17 +243,22 @@ def main(argv):
     predict_pbar = tqdm(total=len(fasta_paths))
 
     prediction_results = []
+    batch_list = []
     for batch in as_completed(preprocess_results, with_results=True).batches():
         batch = list(batch)
         for _, (gpu_args, success) in batch:
             if not success:
                 logging.log(logging.INFO, f"{gpu_args[0]} failed prediction")
 
-        gpu_args = [a for _, (a, s) in batch if s]
-        preprocess_pbar.update(len(gpu_args))
+        batch_list.extend(batch)
+        if len(batch_list) == 20:
+            gpu_args = [a for _, (a, s) in batch if s]
+            preprocess_pbar.update(len(gpu_args))
 
-        batch_results = gpu_client.submit(predict_structure, gpu_args)
-        prediction_results.append(batch_results)
+            batch_results = gpu_client.submit(predict_structure, gpu_args)
+            prediction_results.append(batch_results)
+
+            batch_list = []
 
     for _, (args, success) in as_completed(prediction_results,
                                            with_results=True):

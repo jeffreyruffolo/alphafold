@@ -220,23 +220,24 @@ def main(argv):
     cpu_cluster.scale(FLAGS.cpu_nodes)
     cpu_client = Client(cpu_cluster)
 
-    gpu_mem = f"{ROCKFISH_GPU_MEM_PER_NODE}GB"
-    gpu_cluster = SLURMCluster(
-        cores=FLAGS.gpu_jobs,
-        job_cpu=ROCKFISH_GPU_CORE_PER_NODE,
-        memory=gpu_mem,
-        processes=1,
-        queue="a100",
-        local_directory=scratch_dir,
-        walltime="40:00:00",
-        job_extra=[
-            "--account=jgray21_gpu --gres=gpu:1 -o {}".format(
-                os.path.join(scratch_dir, "slurm-%j.out"))
-        ],
-    )
-    print(gpu_cluster.job_script())
-    gpu_cluster.scale(FLAGS.gpu_nodes)
-    gpu_client = Client(gpu_cluster)
+    # gpu_mem = f"{ROCKFISH_GPU_MEM_PER_NODE}GB"
+    # gpu_cluster = SLURMCluster(
+    #     cores=FLAGS.gpu_jobs,
+    #     job_cpu=ROCKFISH_GPU_CORE_PER_NODE,
+    #     memory=gpu_mem,
+    #     processes=1,
+    #     queue="a100",
+    #     local_directory=scratch_dir,
+    #     walltime="40:00:00",
+    #     job_extra=[
+    #         "--account=jgray21_gpu --gres=gpu:1 -o {}".format(
+    #             os.path.join(scratch_dir, "slurm-%j.out"))
+    #     ],
+    # )
+    # print(gpu_cluster.job_script())
+    # gpu_cluster.scale(FLAGS.gpu_nodes)
+    # gpu_client = Client(gpu_cluster)
+    gpu_client = cpu_client
 
     cpu_args = [
         (fasta_file, FLAGS.output_dir, FLAGS.data_dir, FLAGS.model_preset,

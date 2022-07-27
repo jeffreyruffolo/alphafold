@@ -97,6 +97,7 @@ flags.DEFINE_integer('gpu_jobs', 5, '')
 flags.DEFINE_integer('cpu', 3, '')
 flags.DEFINE_boolean('no_amber', False, '')
 flags.DEFINE_boolean('no_msa', False, '')
+flags.DEFINE_boolean('rerun', False, '')
 
 FLAGS = flags.FLAGS
 
@@ -115,7 +116,7 @@ def migrate_data(data_dir, local_disk):
 
 
 def preprocess_sequence(args):
-    fasta_file, output_dir, data_dir, model_preset, cpu, no_amber, no_msa, recycles = args
+    fasta_file, output_dir, data_dir, model_preset, cpu, no_amber, no_msa, recycles, rerun = args
     # migrate_data(data_dir, "/tmp/")
 
     preprocess_command = f"""
@@ -129,6 +130,7 @@ def preprocess_sequence(args):
         --no_msa {no_msa}
         --recycles {recycles}
         --preprocess
+        --run {rerun}
     """.replace("\n", " ")
 
     logging.log(logging.INFO, f"Running {preprocess_command}")
@@ -144,7 +146,7 @@ def preprocess_sequence(args):
 
 def predict_structure(args):
     logging.log(logging.INFO, len(args), len(args[0]))
-    _, output_dir, data_dir, model_preset, cpu, no_amber, no_msa, recycles = args[
+    _, output_dir, data_dir, model_preset, cpu, no_amber, no_msa, recycles, rerun = args[
         0]
     fasta_files = [a[0] for a in args]
 
@@ -240,7 +242,7 @@ def main(argv):
 
     cpu_args = [
         (fasta_file, FLAGS.output_dir, FLAGS.data_dir, FLAGS.model_preset,
-         FLAGS.cpu, FLAGS.no_amber, FLAGS.no_msa, FLAGS.recycles)
+         FLAGS.cpu, FLAGS.no_amber, FLAGS.no_msa, FLAGS.recycles, FLAGS.rerun)
         for fasta_file in fasta_paths
     ]
     preprocess_results = cpu_client.map(preprocess_sequence, cpu_args)

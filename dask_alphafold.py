@@ -119,6 +119,10 @@ def preprocess_sequence(args):
     fasta_file, output_dir, data_dir, model_preset, cpu, no_amber, no_msa, recycles, rerun = args
     # migrate_data(data_dir, "/tmp/")
 
+    result_pkl = os.path.join(output_dir, fasta_name, "features.pkl")
+    if os.path.exists(result_pkl):
+        return args, True
+
     preprocess_command = f"""
         python run_alphafold.py
         --fasta_paths {fasta_file}

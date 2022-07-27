@@ -195,11 +195,12 @@ def main(argv):
         fasta_paths.append(_fasta_paths)
 
     fasta_paths = list(sorted(fasta_paths))
-    fasta_paths = [
-        fp for fp in fasta_paths if not os.path.exists(
-            os.path.join(FLAGS.output_dir,
-                         os.path.split(fp)[1][:-6], "ranked_0.pdb"))
-    ]
+    if not FLAGS.rerun:
+        fasta_paths = [
+            fp for fp in fasta_paths if not os.path.exists(
+                os.path.join(FLAGS.output_dir,
+                             os.path.split(fp)[1][:-6], "ranked_0.pdb"))
+        ]
 
     fasta_names = [pathlib.Path(p).stem for p in fasta_paths]
     if len(fasta_names) != len(set(fasta_names)):

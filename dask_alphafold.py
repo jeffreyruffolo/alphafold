@@ -119,6 +119,7 @@ def preprocess_sequence(args):
     fasta_file, output_dir, data_dir, model_preset, cpu, no_amber, no_msa, recycles, rerun = args
     # migrate_data(data_dir, "/tmp/")
 
+    fasta_name = os.path.splitext(os.path.basename(fasta_file))[0]
     result_pkl = os.path.join(output_dir, fasta_name, "features.pkl")
     if os.path.exists(result_pkl):
         return args, True
@@ -140,8 +141,6 @@ def preprocess_sequence(args):
     logging.log(logging.INFO, f"Running {preprocess_command}")
     os.system(preprocess_command)
 
-    fasta_name = os.path.splitext(os.path.basename(fasta_file))[0]
-    result_pkl = os.path.join(output_dir, fasta_name, "features.pkl")
     if os.path.exists(result_pkl):
         return args, True
     else:

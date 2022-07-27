@@ -166,6 +166,7 @@ def predict_structure(args):
         --no_amber {no_amber}
         --no_msa {no_msa}
         --recycles {recycles}
+        --rerun {rerun}
     """.replace("\n", " ")
 
     logging.log(logging.INFO, f"Running {predict_command}")

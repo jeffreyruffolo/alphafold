@@ -440,12 +440,12 @@ def main(argv):
             jackhmmer_binary_path=FLAGS.jackhmmer_binary_path,
             uniprot_database_path=uniprot_database_path,
             use_precomputed_msas=FLAGS.use_precomputed_msas,
-            use_single_sequence=FLAGS.no_msa,
+            # use_single_sequence=FLAGS.no_msa,
             n_cpu=FLAGS.cpu)
     else:
         data_pipeline = monomer_data_pipeline
 
-    model_runner_sizes = [100, 200, 400, 600]
+    model_runner_sizes = [100, 200, 400, 600, 1800]
     model_runner_cache = {}
     for s in model_runner_sizes:
         model_names = config.MODEL_PRESETS[FLAGS.model_preset]

@@ -135,7 +135,7 @@ def preprocess_sequence(args):
         --no_msa {no_msa}
         --recycles {recycles}
         --preprocess
-        --run {rerun}
+        --rerun {rerun}
     """.replace("\n", " ")
 
     logging.log(logging.INFO, f"Running {preprocess_command}")

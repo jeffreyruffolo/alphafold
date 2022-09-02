@@ -454,22 +454,43 @@ class AlphaFold(hk.Module):
                         is_training=is_training,
                         safe_key=safe_key)
 
-        num_iter = c.num_recycle
+        if self.config.num_recycle:
+            emb_config = self.config.embeddings_and_evoformer
+            prev = {
+                'prev_pos':
+                jnp.zeros([num_res, residue_constants.atom_type_num, 3]),
+                'prev_msa_first_row':
+                jnp.zeros([num_res, emb_config.msa_channel]),
+                'prev_pair':
+                jnp.zeros([num_res, num_res, emb_config.pair_channel]),
+            }
 
-        def key_body(i, k):
-            k_ = jax.random.split(k[0])
-            o = jax.lax.cond(i == num_iter, lambda _: k[0], lambda _: k_[1],
-                             None)
-            return [k_[0], o]
+            if 'num_iter_recycling' in batch:
+                # Training time: num_iter_recycling is in batch.
+                # Value for each ensemble batch is the same, so arbitrarily taking 0-th.
+                num_iter = batch['num_iter_recycling'][0]
 
-        k = safe_key.get()
-        safe_key = prng.SafeKey(
-            jax.lax.fori_loop(0,
-                              batch.pop("iter") + 1, key_body, [k, k])[1])
-        ##########################################
+                # Add insurance that even when ensembling, we will not run more
+                # recyclings than the model is configured to run.
+                num_iter = jnp.minimum(num_iter, c.num_recycle)
+            else:
+                # Eval mode or tests: use the maximum number of iterations.
+                num_iter = c.num_recycle
 
-        ret = apply_network(prev=batch.pop("prev"), safe_key=safe_key)
-        ret["prev"] = get_prev(ret)
+            def recycle_body(i, x):
+                del i
+                prev, safe_key = x
+                safe_key1, safe_key2 = safe_key.split() if c.resample_msa_in_recycling else safe_key.duplicate()  # pylint: disable=line-too-long
+                ret = apply_network(prev=prev, safe_key=safe_key2)
+                return get_prev(ret), safe_key1
+
+            prev, safe_key = hk.fori_loop(0, num_iter, recycle_body,
+                                          (prev, safe_key))
+        else:
+            prev = {}
+
+        # Run extra iteration.
+        ret = apply_network(prev=prev, safe_key=safe_key)
 
         if not return_representations:
             del ret['representations']

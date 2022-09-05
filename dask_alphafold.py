@@ -97,6 +97,7 @@ flags.DEFINE_integer('gpu_jobs', 5, '')
 flags.DEFINE_integer('cpu', 3, '')
 flags.DEFINE_boolean('no_amber', False, '')
 flags.DEFINE_boolean('rerun', False, '')
+flags.DEFINE_boolean('only_cpu', False, '')
 
 FLAGS = flags.FLAGS
 
@@ -224,23 +225,26 @@ def main(argv):
     cpu_cluster.scale(FLAGS.cpu_nodes)
     cpu_client = Client(cpu_cluster)
 
-    gpu_mem = f"{ROCKFISH_GPU_MEM_PER_NODE}GB"
-    gpu_cluster = SLURMCluster(
-        cores=FLAGS.gpu_jobs,
-        job_cpu=ROCKFISH_GPU_CORE_PER_NODE,
-        memory=gpu_mem,
-        processes=1,
-        queue="a100",
-        local_directory=scratch_dir,
-        walltime="40:00:00",
-        job_extra=[
-            "--account=jgray21_gpu --gres=gpu:1 -o {}".format(
-                os.path.join(scratch_dir, "slurm-%j.out"))
-        ],
-    )
-    print(gpu_cluster.job_script())
-    gpu_cluster.scale(FLAGS.gpu_nodes)
-    gpu_client = Client(gpu_cluster)
+    if FLAGS.only_cpu:
+        gpu_client = cpu_client
+    else:
+        gpu_mem = f"{ROCKFISH_GPU_MEM_PER_NODE}GB"
+        gpu_cluster = SLURMCluster(
+            cores=FLAGS.gpu_jobs,
+            job_cpu=ROCKFISH_GPU_CORE_PER_NODE,
+            memory=gpu_mem,
+            processes=1,
+            queue="a100",
+            local_directory=scratch_dir,
+            walltime="40:00:00",
+            job_extra=[
+                "--account=jgray21_gpu --gres=gpu:1 -o {}".format(
+                    os.path.join(scratch_dir, "slurm-%j.out"))
+            ],
+        )
+        print(gpu_cluster.job_script())
+        gpu_cluster.scale(FLAGS.gpu_nodes)
+        gpu_client = Client(gpu_cluster)
 
     cpu_args = [
         (fasta_file, FLAGS.output_dir, FLAGS.data_dir, FLAGS.model_preset,
@@ -252,19 +256,44 @@ def main(argv):
     preprocess_pbar = tqdm(total=len(fasta_paths))
     predict_pbar = tqdm(total=len(fasta_paths))
 
+    # prediction_results = []
+    # batch_list = []
+    # for batch in as_completed(preprocess_results, with_results=True).batches():
+    #     batch = list(batch)
+    #     for _, (gpu_args, success) in batch:
+    #         if not success:
+    #             logging.log(logging.INFO, f"{gpu_args[0]} failed prediction")
+
+    #     preprocess_pbar.update(len(batch))
+    #     batch_list.extend(batch)
+
+    #     almost_done = len(prediction_results) + len(batch) > len(
+    #         preprocess_results) - 50
+    #     if len(batch_list) > 50 or almost_done:
+    #         gpu_args = [a for _, (a, s) in batch_list if s]
+
+    #         batch_results = gpu_client.submit(predict_structure, gpu_args)
+    #         prediction_results.append(batch_results)
+
+    #         batch_list = []
+
+    # for _, (args, success) in as_completed(prediction_results,
+    #                                        with_results=True):
+    #     if success:
+    #         predict_pbar.update(len(args))
+
     prediction_results = []
     batch_list = []
-    for batch in as_completed(preprocess_results, with_results=True).batches():
-        batch = list(batch)
-        for _, (gpu_args, success) in batch:
-            if not success:
-                logging.log(logging.INFO, f"{gpu_args[0]} failed prediction")
+    for batch in as_completed(preprocess_results, with_results=True):
+        _, (gpu_args, success) = batch
+        if not success:
+            logging.log(logging.INFO, f"{gpu_args[0]} failed prediction")
 
-        preprocess_pbar.update(len(batch))
-        batch_list.extend(batch)
+        preprocess_pbar.update(1)
+        batch_list.append(batch)
         almost_done = len(prediction_results) + len(batch) > len(
-            preprocess_results) - 50
-        if len(batch_list) > 50 or almost_done:
+            preprocess_results) - 10
+        if len(batch_list) > 10 or almost_done:
             gpu_args = [a for _, (a, s) in batch_list if s]
 
             batch_results = gpu_client.submit(predict_structure, gpu_args)

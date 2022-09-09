@@ -112,6 +112,7 @@ flags.DEFINE_integer('parallel', 1, '')
 flags.DEFINE_integer('cpu', 3, '')
 flags.DEFINE_boolean('preprocess', False, '')
 flags.DEFINE_boolean('no_amber', False, '')
+flags.DEFINE_boolean('no_msa', False, '')
 flags.DEFINE_boolean('rerun', False, '')
 
 FLAGS = flags.FLAGS
@@ -430,6 +431,7 @@ def main(argv):
         template_featurizer=template_featurizer,
         use_small_bfd=use_small_bfd,
         use_precomputed_msas=FLAGS.use_precomputed_msas,
+        use_single_sequence=FLAGS.no_msa,
         n_cpu=FLAGS.cpu)
 
     if run_multimer_system:
@@ -438,7 +440,8 @@ def main(argv):
             jackhmmer_binary_path=FLAGS.jackhmmer_binary_path,
             uniprot_database_path=uniprot_database_path,
             use_precomputed_msas=FLAGS.use_precomputed_msas,
-            n_cpu=FLAGS.cpu)
+            n_cpu=FLAGS.cpu,
+        )
     else:
         data_pipeline = monomer_data_pipeline
 

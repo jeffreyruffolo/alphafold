@@ -256,8 +256,6 @@ class DataPipeline:
             description=input_description,
             num_res=num_res)
 
-        msa_features = make_msa_features((uniref90_msa, bfd_msa, mgnify_msa))
-
         if not self.use_single_sequence:
             logging.info('Uniref90 MSA size: %d sequences.', len(uniref90_msa))
             logging.info('BFD MSA size: %d sequences.', len(bfd_msa))
